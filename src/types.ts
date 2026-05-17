@@ -1,0 +1,1 @@
+export type Screen = 'login' | 'home' | 'vor' | 'barrio';
