@@ -38,6 +38,25 @@ const APPS = [
       { label: 'Incidentes', value: '—' },
       { label: 'Usuarios', value: '—' },
       { label: 'Reportes', value: '—' },
+
+      {
+    id: 'yavoy' as Screen,
+    name: 'Ya Voy!',
+    desc: 'Plataforma de reparto — cliente, restaurante y repartidor',
+    icon: '🛵',
+    color: '#f97316',
+    borderIdle: 'rgba(249,115,22,0.18)',
+    borderHover: 'rgba(249,115,22,0.5)',
+    bgHover: 'rgba(249,115,22,0.06)',
+    topLine: '#f97316',
+    accent: '#1a0e00',
+    stats: [
+      { label: 'Apps', value: '3' },
+      { label: 'Pedidos', value: '—' },
+      { label: 'Estado', value: 'DEV' },
+    ],
+  },
+  
     ],
   },
 ];

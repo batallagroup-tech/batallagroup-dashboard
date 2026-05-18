@@ -1,1 +1,1 @@
-export type Screen = 'login' | 'home' | 'vor' | 'barrio';
+export type Screen = 'login' | 'home' | 'vor' | 'barrio' | 'yavoy';

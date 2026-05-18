@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import VORDashboard from './pages/VORDashboard';
 import BarrioAlerta from './pages/BarrioAlerta';
+import YaVoy from './pages/YaVoy';
 
 export type Screen = 'login' | 'home' | 'vor' | 'barrio';
 
@@ -25,6 +26,7 @@ export default function App() {
   if (screen === 'home') return <Home onNavigate={setScreen} onLogout={handleLogout} />;
   if (screen === 'vor') return <VORDashboard onBack={() => setScreen('home')} />;
   if (screen === 'barrio') return <BarrioAlerta onBack={() => setScreen('home')} />;
+  if (screen === 'yavoy') return <YaVoy onBack={() => setScreen('home')} />;
 
   return null;
 }
