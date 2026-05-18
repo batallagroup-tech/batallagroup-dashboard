@@ -7,108 +7,214 @@ export default function Login({ onLogin }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const login = () => {
-    if (email === 'batallagroup@gmail.com' && password === '1905batallagroup06') {
-      setError('');
-      onLogin();
-    } else {
-      setError('Correo o contraseña incorrectos.');
-    }
+    if (!email || !password) return;
+    setLoading(true);
+    setTimeout(() => {
+      if (email === 'batallagroup@gmail.com' && password === '1905batallagroup06') {
+        setError('');
+        onLogin();
+      } else {
+        setError('Credenciales incorrectas.');
+        setLoading(false);
+      }
+    }, 400);
   };
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0a0a0f 0%, #0d0d18 50%, #080810 100%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontFamily: "'Courier New', monospace", padding: '1rem',
-      position: 'relative', overflow: 'hidden',
+      background: '#050508',
+      display: 'flex',
+      fontFamily: "'Courier New', monospace",
+      overflow: 'hidden',
     }}>
-      {/* Grid bg */}
+      {/* Left panel — branding */}
       <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '60px 80px',
+        position: 'relative',
+        borderRight: '1px solid #0f0f18',
+      }}>
+        {/* Background texture */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.015) 0%, transparent 60%)',
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }} />
 
-      <div style={{ width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }}>
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div style={{ fontSize: 44, marginBottom: 10 }}>⚡</div>
-          <h1 style={{ color: '#fff', fontSize: 28, fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>
-            BATALLA<span style={{ color: '#e91e8c', textShadow: '0 0 20px rgba(233,30,140,0.5)' }}>GROUP</span>
-          </h1>
-          <p style={{ color: '#3a3a58', fontSize: 11, marginTop: 8, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÓN</p>
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ marginBottom: 48 }}>
+            <div style={{
+              display: 'inline-block',
+              fontSize: 11, letterSpacing: '0.4em',
+              color: '#ffffff',
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 4, padding: '5px 14px',
+              marginBottom: 32,
+            }}>
+              SISTEMA PRIVADO
+            </div>
+            <h1 style={{
+              color: '#ffffff',
+              fontSize: 52,
+              fontWeight: 900,
+              margin: 0,
+              letterSpacing: '4px',
+              lineHeight: 1.1,
+            }}>
+              BATALLA
+            </h1>
+            <h1 style={{
+              color: '#ffffff',
+              fontSize: 52,
+              fontWeight: 900,
+              margin: 0,
+              letterSpacing: '4px',
+              lineHeight: 1.1,
+              opacity: 0.35,
+            }}>
+              GROUP
+            </h1>
+          </div>
+
+          <div style={{ borderLeft: '2px solid rgba(255,255,255,0.12)', paddingLeft: 20 }}>
+            <p style={{ color: '#404050', fontSize: 12, margin: 0, lineHeight: 1.8, letterSpacing: '0.05em' }}>
+              Panel de administración<br />
+              acceso restringido
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div style={{
+        width: 480,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '60px 56px',
+        background: '#07070c',
+      }}>
+        <div style={{ marginBottom: 40 }}>
+          <h2 style={{ color: '#ffffff', fontSize: 22, fontWeight: 900, margin: '0 0 8px', letterSpacing: '1px' }}>
+            Acceder
+          </h2>
+          <p style={{ color: '#2a2a3a', fontSize: 12, margin: 0, letterSpacing: '0.1em' }}>
+            Introduce tus credenciales
+          </p>
         </div>
 
-        <div style={{
-          background: 'rgba(14,14,26,0.95)',
-          border: '1px solid #1e1e32',
-          borderRadius: 18, padding: '2.2rem',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-        }}>
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ color: '#6868a0', fontSize: 10, letterSpacing: '0.25em', display: 'block', marginBottom: 8 }}>CORREO</label>
-            <input
-              type="email" value={email}
-              onChange={e => setEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && login()}
-              placeholder="batallagroup@gmail.com"
-              style={{
-                width: '100%', padding: '12px 16px',
-                background: '#151525', border: '1px solid #2a2a42',
-                borderRadius: 10, color: '#e8e8ff', fontSize: 14,
-                boxSizing: 'border-box',
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: 26, position: 'relative' }}>
-            <label style={{ color: '#6868a0', fontSize: 10, letterSpacing: '0.25em', display: 'block', marginBottom: 8 }}>CONTRASEÑA</label>
-            <input
-              type={showPass ? 'text' : 'password'} value={password}
-              onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && login()}
-              placeholder="••••••••"
-              style={{
-                width: '100%', padding: '12px 44px 12px 16px',
-                background: '#151525', border: '1px solid #2a2a42',
-                borderRadius: 10, color: '#e8e8ff', fontSize: 14,
-                boxSizing: 'border-box',
-              }}
-            />
-            <button
-              onClick={() => setShowPass(!showPass)}
-              style={{
-                position: 'absolute', right: 12, top: 34,
-                background: 'none', border: 'none',
-                color: '#555', cursor: 'pointer', fontSize: 16,
-              }}
-            >
-              {showPass ? '🙈' : '👁️'}
-            </button>
-          </div>
-
-          {error && (
-            <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 16, textAlign: 'center' }}>
-              {error}
-            </p>
-          )}
-
-          <button
-            onClick={login}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ color: '#303045', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
+            CORREO ELECTRÓNICO
+          </label>
+          <input
+            type="email" value={email}
+            onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && login()}
+            placeholder="usuario@batallagroup.com"
             style={{
-              width: '100%', padding: 14,
-              background: '#e91e8c', border: 'none',
-              borderRadius: 10, color: '#fff',
-              fontWeight: 900, fontSize: 15, cursor: 'pointer',
-              letterSpacing: '0.1em',
-              boxShadow: '0 0 24px rgba(233,30,140,0.35)',
+              width: '100%', padding: '14px 18px',
+              background: '#0c0c14',
+              border: '1px solid #1a1a28',
+              borderRadius: 10, color: '#d0d0e0',
+              fontSize: 14, boxSizing: 'border-box', outline: 'none',
+              transition: 'border-color 0.2s',
+            }}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#3a3a58'}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#1a1a28'}
+          />
+        </div>
+
+        <div style={{ marginBottom: 32, position: 'relative' }}>
+          <label style={{ color: '#303045', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
+            CONTRASEÑA
+          </label>
+          <input
+            type={showPass ? 'text' : 'password'} value={password}
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && login()}
+            placeholder="••••••••••••"
+            style={{
+              width: '100%', padding: '14px 48px 14px 18px',
+              background: '#0c0c14',
+              border: '1px solid #1a1a28',
+              borderRadius: 10, color: '#d0d0e0',
+              fontSize: 14, boxSizing: 'border-box', outline: 'none',
+              transition: 'border-color 0.2s',
+            }}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#3a3a58'}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#1a1a28'}
+          />
+          <button
+            onClick={() => setShowPass(!showPass)}
+            style={{
+              position: 'absolute', right: 14, top: 38,
+              background: 'none', border: 'none',
+              color: '#2a2a3a', cursor: 'pointer', fontSize: 15,
             }}
           >
-            ENTRAR →
+            {showPass ? '🙈' : '👁️'}
           </button>
         </div>
+
+        {error && (
+          <div style={{
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            borderRadius: 8, padding: '10px 16px',
+            color: '#ef4444', fontSize: 12,
+            marginBottom: 20, letterSpacing: '0.05em',
+          }}>
+            {error}
+          </div>
+        )}
+
+        <button
+          onClick={login}
+          disabled={loading}
+          style={{
+            width: '100%', padding: '15px',
+            background: loading ? '#0f0f1a' : '#ffffff',
+            border: '1px solid ' + (loading ? '#1a1a28' : '#ffffff'),
+            borderRadius: 10,
+            color: loading ? '#303045' : '#050508',
+            fontWeight: 900, fontSize: 13,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            letterSpacing: '0.25em',
+            fontFamily: "'Courier New', monospace",
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => {
+            if (!loading) {
+              (e.currentTarget as HTMLButtonElement).style.background = '#e0e0f0';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#e0e0f0';
+            }
+          }}
+          onMouseLeave={e => {
+            if (!loading) {
+              (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#ffffff';
+            }
+          }}
+        >
+          {loading ? 'VERIFICANDO...' : 'ENTRAR →'}
+        </button>
+
+        <p style={{ color: '#1a1a28', fontSize: 11, marginTop: 32, textAlign: 'center', letterSpacing: '0.1em' }}>
+          © 2026 BatallaGroup. Acceso restringido.
+        </p>
       </div>
     </div>
   );
