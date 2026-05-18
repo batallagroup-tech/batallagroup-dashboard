@@ -36,7 +36,7 @@ export default function Login({ onLogin }: Props) {
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ fontSize: 44, marginBottom: 10 }}>⚡</div>
           <h1 style={{ color: '#fff', fontSize: 28, fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>
-            BATALLA<span style={{ color: '#1a1a2e', textShadow: '0 0 20px rgba(233,30,140,0.5)' }}>GROUP</span>
+            BATALLA<span style={{ color: '#e91e8c', textShadow: '0 0 20px rgba(233,30,140,0.5)' }}>GROUP</span>
           </h1>
           <p style={{ color: '#3a3a58', fontSize: 11, marginTop: 8, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÓN</p>
         </div>
@@ -99,7 +99,7 @@ export default function Login({ onLogin }: Props) {
             onClick={login}
             style={{
               width: '100%', padding: 14,
-              background: '#1a1a2e', border: 'none',
+              background: '#e91e8c', border: 'none',
               borderRadius: 10, color: '#fff',
               fontWeight: 900, fontSize: 15, cursor: 'pointer',
               letterSpacing: '0.1em',
@@ -113,4 +113,3 @@ export default function Login({ onLogin }: Props) {
     </div>
   );
 }
-
