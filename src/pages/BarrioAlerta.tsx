@@ -470,7 +470,7 @@ const NOTICE_COLORS: Record<NoticeCategory, string> = {
   Agua: '#3b82f6', Transporte: '#22c55e', General: '#94a3b8',
 };
 
-function Notices({ onRefresh }: { loading: boolean; onRefresh: () => void }) {
+function Notices(_props: { loading?: boolean; onRefresh: () => void }) {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [notLoading, setNotLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
