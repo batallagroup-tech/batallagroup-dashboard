@@ -11,12 +11,61 @@ interface Reto {
   activo: boolean;
 }
 
-const MODOS = ['Extremo Beberaje', 'Beberaje', 'Familiar', 'Picante', 'Pareja', 'Niños', 'Inocente', 'Fiesta', 'Escuela', 'Profundo', 'Colegas', 'Extremo', 'Casual'];
+// Modos exactos como están en la base de datos
+const MODOS = [
+  'Extremo Beberaje',
+  'Beberaje',
+  'Familiar',
+  'Picante',
+  'Pareja',
+  'Niños',
+  'Inocente',
+  'Fiesta',
+  'Escuela',
+  'Profundo',
+  'Colegas',
+  'Extremo',
+  'Sexo Casual',
+];
 const TIPOS = ['Verdad', 'Reto'];
 const INTENSIDADES = [1, 2, 3, 4, 5];
 const INTENSIDAD_LABELS: Record<number, string> = { 1: 'Suave', 2: 'Medio', 3: 'Alto', 4: 'Intenso', 5: 'Extremo' };
-
 const EMPTY_RETO: Reto = { modo: 'Familiar', tipo: 'Reto', texto: '', intensidad: 3, timer: 0, activo: true };
+const PAGE_SIZE = 20;
+
+const C = {
+  pink: '#e91e8c',
+  pinkDim: '#aa1565',
+  bg: '#080810',
+  surface: '#0e0e1a',
+  surface2: '#151525',
+  border: '#1e1e32',
+  borderLight: '#2a2a42',
+  text: '#e8e8ff',
+  muted: '#6868a0',
+  dimmed: '#3a3a58',
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  background: C.surface2,
+  border: `1px solid ${C.borderLight}`,
+  borderRadius: 8,
+  color: C.text,
+  fontSize: 13,
+  fontFamily: "'Courier New', monospace",
+  outline: 'none',
+};
+
+const labelStyle: React.CSSProperties = {
+  color: C.muted,
+  fontSize: 10,
+  letterSpacing: '0.2em',
+  display: 'block',
+  marginBottom: 6,
+  textTransform: 'uppercase',
+};
 
 interface Props { onBack: () => void; }
 
@@ -32,12 +81,12 @@ export default function VORDashboard({ onBack }: Props) {
   const [editReto, setEditReto] = useState<Reto>(EMPTY_RETO);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
+  const [toastType, setToastType] = useState<'ok' | 'err'>('ok');
 
-  const PAGE_SIZE = 20;
-
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, type: 'ok' | 'err' = 'ok') => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3000);
+    setToastType(type);
+    setTimeout(() => setToast(''), 3500);
   };
 
   const fetchRetos = async () => {
@@ -46,9 +95,11 @@ export default function VORDashboard({ onBack }: Props) {
     if (filterModo) query = query.eq('modo', filterModo);
     if (filterTipo) query = query.eq('tipo', filterTipo);
     if (filterIntensidad) query = query.eq('intensidad', filterIntensidad);
-    query = query.order('created_at', { ascending: false }).range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
-    const { data, count } = await query;
-    setRetos(data || []);
+    query = query.order('created_at', { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    const { data, count, error } = await query;
+    if (error) showToast('Error cargando retos: ' + error.message, 'err');
+    setRetos((data as Reto[]) || []);
     setTotal(count || 0);
     setLoading(false);
   };
@@ -56,113 +107,270 @@ export default function VORDashboard({ onBack }: Props) {
   useEffect(() => { fetchRetos(); }, [filterModo, filterTipo, filterIntensidad, page]);
 
   const save = async () => {
-    if (!editReto.texto.trim()) { showToast('❌ El texto no puede estar vacío'); return; }
+    if (!editReto.texto.trim()) { showToast('El texto no puede estar vacío', 'err'); return; }
     setSaving(true);
+    const payload = {
+      modo: editReto.modo,
+      tipo: editReto.tipo,
+      texto: editReto.texto.trim(),
+      intensidad: editReto.intensidad,
+      timer: editReto.timer,
+      activo: editReto.activo,
+    };
     if (editReto.id) {
-      await supabase.from('retos').update({ modo: editReto.modo, tipo: editReto.tipo, texto: editReto.texto, intensidad: editReto.intensidad, timer: editReto.timer, activo: editReto.activo }).eq('id', editReto.id);
-      showToast('✅ Reto actualizado');
+      const { error } = await supabase.from('retos').update(payload).eq('id', editReto.id);
+      if (error) { showToast('Error al actualizar: ' + error.message, 'err'); setSaving(false); return; }
+      showToast('Reto actualizado ✓');
     } else {
-      await supabase.from('retos').insert({ modo: editReto.modo, tipo: editReto.tipo, texto: editReto.texto, intensidad: editReto.intensidad, timer: editReto.timer, activo: editReto.activo });
-      showToast('✅ Reto agregado');
+      const { error } = await supabase.from('retos').insert(payload);
+      if (error) { showToast('Error al agregar: ' + error.message, 'err'); setSaving(false); return; }
+      showToast('Reto agregado ✓');
     }
     setSaving(false);
     setShowForm(false);
     setEditReto(EMPTY_RETO);
+    setPage(0);
     fetchRetos();
   };
 
   const toggleActivo = async (reto: Reto) => {
-    await supabase.from('retos').update({ activo: !reto.activo }).eq('id', reto.id);
-    showToast(reto.activo ? '⏸ Reto desactivado' : '▶️ Reto activado');
+    const { error } = await supabase.from('retos').update({ activo: !reto.activo }).eq('id', reto.id);
+    if (error) { showToast('Error al cambiar estado: ' + error.message, 'err'); return; }
+    showToast(reto.activo ? 'Desactivado' : 'Activado');
     fetchRetos();
   };
 
   const deleteReto = async (id: string) => {
     if (!confirm('¿Eliminar este reto permanentemente?')) return;
-    await supabase.from('retos').delete().eq('id', id);
-    showToast('🗑️ Reto eliminado');
+    const { error } = await supabase.from('retos').delete().eq('id', id);
+    if (error) { showToast('Error al eliminar: ' + error.message, 'err'); return; }
+    showToast('Eliminado');
     fetchRetos();
   };
 
-  const s = { fontFamily: "'Courier New', monospace" };
-  const inputStyle = { width: '100%', padding: '10px 12px', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, fontFamily: "'Courier New', monospace" };
-  const labelStyle = { color: '#666', fontSize: 10, letterSpacing: '0.2em', display: 'block', marginBottom: 6 };
-  const btnPrimary = { background: '#e91e8c', border: 'none', borderRadius: 8, color: '#fff', padding: '10px 20px', cursor: 'pointer', fontSize: 12, fontWeight: 900, ...s };
-  const btnSecondary = { background: 'none', border: '1px solid #333', borderRadius: 8, color: '#666', padding: '10px 20px', cursor: 'pointer', fontSize: 12, ...s };
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1;
+  const isFirst = page === 0;
+  const isLast = (page + 1) * PAGE_SIZE >= total;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#080808', ...s, padding: '2rem 1rem' }}>
+    <div style={{
+      minHeight: '100vh', width: '100%',
+      background: C.bg,
+      fontFamily: "'Courier New', monospace",
+    }}>
+      {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, background: '#111', border: '1px solid #333', borderRadius: 10, padding: '12px 20px', color: '#fff', fontSize: 13, zIndex: 9999 }}>
+        <div style={{
+          position: 'fixed', top: 20, right: 20, zIndex: 9999,
+          background: toastType === 'ok' ? '#0e1e0e' : '#1e0e0e',
+          border: `1px solid ${toastType === 'ok' ? '#22c55e' : '#ef4444'}`,
+          borderRadius: 10, padding: '12px 20px',
+          color: toastType === 'ok' ? '#86efac' : '#fca5a5',
+          fontSize: 13, maxWidth: 360,
+          boxShadow: `0 4px 24px ${toastType === 'ok' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+        }}>
           {toast}
         </div>
       )}
 
-      <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <button onClick={onBack} style={{ ...btnSecondary, padding: '8px 14px' }}>← Volver</button>
-            <div>
-              <h1 style={{ color: '#fff', fontSize: 20, fontWeight: 900, margin: 0 }}>🎮 VOR — Verdad o Reto</h1>
-              <p style={{ color: '#444', fontSize: 11, margin: '2px 0 0', letterSpacing: '0.15em' }}>{total.toLocaleString()} RETOS EN BASE DE DATOS</p>
-            </div>
-          </div>
-          <button onClick={() => { setEditReto(EMPTY_RETO); setShowForm(true); }} style={btnPrimary}>
-            + Nuevo reto
+      {/* Header */}
+      <div style={{
+        background: C.surface,
+        borderBottom: `1px solid ${C.border}`,
+        padding: '16px 28px',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <button
+            onClick={onBack}
+            style={{
+              background: 'rgba(255,255,255,0.04)',
+              border: `1px solid ${C.borderLight}`,
+              borderRadius: 8, color: '#aaa',
+              padding: '8px 16px', cursor: 'pointer',
+              fontSize: 12, fontFamily: "'Courier New', monospace",
+            }}
+          >
+            ← Volver
           </button>
-        </div>
-
-        {/* Filtros */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
           <div>
-            <label style={labelStyle}>MODO</label>
-            <select value={filterModo} onChange={e => { setFilterModo(e.target.value); setPage(0); }} style={{ ...inputStyle }}>
+            <h1 style={{ color: C.text, fontSize: 18, fontWeight: 900, margin: 0 }}>
+              🎮 VOR — Verdad o Reto
+            </h1>
+            <p style={{ color: C.dimmed, fontSize: 11, margin: '2px 0 0', letterSpacing: '0.15em' }}>
+              {total.toLocaleString()} RETOS EN BASE DE DATOS
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => { setEditReto(EMPTY_RETO); setShowForm(true); }}
+          style={{
+            background: C.pink,
+            border: `1px solid ${C.pink}`,
+            borderRadius: 8, color: '#fff',
+            padding: '10px 22px', cursor: 'pointer',
+            fontSize: 13, fontWeight: 900,
+            fontFamily: "'Courier New', monospace",
+            boxShadow: `0 0 16px rgba(233,30,140,0.3)`,
+          }}
+        >
+          + Nuevo reto
+        </button>
+      </div>
+
+      <div style={{ padding: '24px 28px' }}>
+        {/* Filtros */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 12, marginBottom: 20,
+        }}>
+          <div>
+            <label style={labelStyle}>Modo</label>
+            <select
+              value={filterModo}
+              onChange={e => { setFilterModo(e.target.value); setPage(0); }}
+              style={inputStyle}
+            >
               <option value="">Todos los modos</option>
               {MODOS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>TIPO</label>
-            <select value={filterTipo} onChange={e => { setFilterTipo(e.target.value); setPage(0); }} style={{ ...inputStyle }}>
+            <label style={labelStyle}>Tipo</label>
+            <select
+              value={filterTipo}
+              onChange={e => { setFilterTipo(e.target.value); setPage(0); }}
+              style={inputStyle}
+            >
               <option value="">Verdad y Reto</option>
               {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
-            <label style={labelStyle}>INTENSIDAD</label>
-            <select value={filterIntensidad} onChange={e => { setFilterIntensidad(Number(e.target.value)); setPage(0); }} style={{ ...inputStyle }}>
+            <label style={labelStyle}>Intensidad</label>
+            <select
+              value={filterIntensidad}
+              onChange={e => { setFilterIntensidad(Number(e.target.value)); setPage(0); }}
+              style={inputStyle}
+            >
               <option value={0}>Todas</option>
               {INTENSIDADES.map(i => <option key={i} value={i}>{i} — {INTENSIDAD_LABELS[i]}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Lista de retos */}
-        <div style={{ background: '#111', border: '1px solid #1a1a1a', borderRadius: 14, overflow: 'hidden' }}>
+        {/* Lista */}
+        <div style={{
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 14, overflow: 'hidden', marginBottom: 16,
+        }}>
           {loading ? (
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#444' }}>Cargando retos...</div>
+            <div style={{ padding: '3rem', textAlign: 'center', color: C.dimmed }}>
+              Cargando retos...
+            </div>
           ) : retos.length === 0 ? (
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#444' }}>No hay retos con esos filtros</div>
+            <div style={{ padding: '3rem', textAlign: 'center', color: C.dimmed }}>
+              No hay retos con esos filtros
+            </div>
           ) : (
             retos.map((reto, i) => (
-              <div key={reto.id} style={{ padding: '14px 16px', borderBottom: i < retos.length - 1 ? '1px solid #1a1a1a' : 'none', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                    <span style={{ background: reto.tipo === 'Verdad' ? '#1a1040' : '#1a0010', color: reto.tipo === 'Verdad' ? '#818cf8' : '#e91e8c', fontSize: 10, padding: '3px 8px', borderRadius: 6, fontWeight: 700, letterSpacing: '0.1em' }}>
-                      {reto.tipo.toUpperCase()}
+              <div
+                key={reto.id}
+                style={{
+                  padding: '14px 18px',
+                  borderBottom: i < retos.length - 1 ? `1px solid ${C.border}` : 'none',
+                  display: 'flex', alignItems: 'flex-start', gap: 12,
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 7, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{
+                      background: reto.tipo === 'Verdad' ? '#1a1040' : '#1a0010',
+                      color: reto.tipo === 'Verdad' ? '#818cf8' : C.pink,
+                      fontSize: 10, padding: '3px 9px', borderRadius: 6, fontWeight: 700,
+                      border: `1px solid ${reto.tipo === 'Verdad' ? '#3730a3' : '#9d1570'}`,
+                    }}>
+                      {reto.tipo}
                     </span>
-                    <span style={{ background: '#1a1a1a', color: '#888', fontSize: 10, padding: '3px 8px', borderRadius: 6 }}>{reto.modo}</span>
-                    <span style={{ background: '#1a1a1a', color: '#888', fontSize: 10, padding: '3px 8px', borderRadius: 6 }}>Intensidad {reto.intensidad}</span>
-                    {reto.timer > 0 && <span style={{ background: '#1a1a1a', color: '#888', fontSize: 10, padding: '3px 8px', borderRadius: 6 }}>⏱ {reto.timer}s</span>}
-                    {!reto.activo && <span style={{ background: '#1a0a0a', color: '#ef4444', fontSize: 10, padding: '3px 8px', borderRadius: 6 }}>INACTIVO</span>}
+                    <span style={{
+                      background: C.surface2, color: '#aaa',
+                      fontSize: 10, padding: '3px 9px', borderRadius: 6,
+                      border: `1px solid ${C.borderLight}`,
+                    }}>
+                      {reto.modo}
+                    </span>
+                    <span style={{
+                      background: C.surface2, color: '#aaa',
+                      fontSize: 10, padding: '3px 9px', borderRadius: 6,
+                      border: `1px solid ${C.borderLight}`,
+                    }}>
+                      Int. {reto.intensidad}
+                    </span>
+                    {reto.timer > 0 && (
+                      <span style={{
+                        background: C.surface2, color: '#aaa',
+                        fontSize: 10, padding: '3px 9px', borderRadius: 6,
+                        border: `1px solid ${C.borderLight}`,
+                      }}>
+                        ⏱ {reto.timer}s
+                      </span>
+                    )}
+                    {!reto.activo && (
+                      <span style={{
+                        background: '#1a0808', color: '#ef4444',
+                        fontSize: 10, padding: '3px 9px', borderRadius: 6,
+                        border: '1px solid #3a1515', fontWeight: 700,
+                      }}>
+                        INACTIVO
+                      </span>
+                    )}
                   </div>
-                  <p style={{ color: reto.activo ? '#ccc' : '#555', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{reto.texto}</p>
+                  <p style={{
+                    color: reto.activo ? '#d0d0e8' : '#4a4a6a',
+                    fontSize: 13, margin: 0, lineHeight: 1.55, wordBreak: 'break-word',
+                  }}>
+                    {reto.texto}
+                  </p>
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => { setEditReto(reto); setShowForm(true); }} style={{ background: 'none', border: '1px solid #2a2a2a', borderRadius: 6, color: '#666', padding: '6px 10px', cursor: 'pointer', fontSize: 11, ...s }}>✏️</button>
-                  <button onClick={() => toggleActivo(reto)} style={{ background: 'none', border: '1px solid #2a2a2a', borderRadius: 6, color: '#666', padding: '6px 10px', cursor: 'pointer', fontSize: 11, ...s }}>{reto.activo ? '⏸' : '▶️'}</button>
-                  <button onClick={() => deleteReto(reto.id!)} style={{ background: 'none', border: '1px solid #2a2a2a', borderRadius: 6, color: '#666', padding: '6px 10px', cursor: 'pointer', fontSize: 11, ...s }}>🗑️</button>
+                  <button
+                    onClick={() => { setEditReto(reto); setShowForm(true); }}
+                    style={{
+                      background: C.surface2,
+                      border: `1px solid ${C.borderLight}`,
+                      borderRadius: 6, color: '#bbb',
+                      padding: '6px 11px', cursor: 'pointer', fontSize: 11,
+                    }}
+                    title="Editar"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => toggleActivo(reto)}
+                    style={{
+                      background: C.surface2,
+                      border: `1px solid ${C.borderLight}`,
+                      borderRadius: 6, color: '#bbb',
+                      padding: '6px 11px', cursor: 'pointer', fontSize: 11,
+                    }}
+                    title={reto.activo ? 'Desactivar' : 'Activar'}
+                  >
+                    {reto.activo ? '⏸' : '▶️'}
+                  </button>
+                  <button
+                    onClick={() => deleteReto(reto.id!)}
+                    style={{
+                      background: '#1a0808',
+                      border: '1px solid #3a1515',
+                      borderRadius: 6, color: '#ef4444',
+                      padding: '6px 11px', cursor: 'pointer', fontSize: 11,
+                    }}
+                    title="Eliminar"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))
@@ -170,38 +378,108 @@ export default function VORDashboard({ onBack }: Props) {
         </div>
 
         {/* Paginación */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-          <span style={{ color: '#444', fontSize: 12 }}>
-            Mostrando {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} de {total.toLocaleString()}
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: C.surface, border: `1px solid ${C.border}`,
+          borderRadius: 12, padding: '12px 18px',
+        }}>
+          <span style={{ color: C.muted, fontSize: 12 }}>
+            {total > 0
+              ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, total)} de ${total.toLocaleString()}`
+              : '0 resultados'}
           </span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} style={{ ...btnSecondary, opacity: page === 0 ? 0.3 : 1 }}>← Anterior</button>
-            <button onClick={() => setPage(p => p + 1)} disabled={(page + 1) * PAGE_SIZE >= total} style={{ ...btnSecondary, opacity: (page + 1) * PAGE_SIZE >= total ? 0.3 : 1 }}>Siguiente →</button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={isFirst}
+              style={{
+                background: isFirst ? C.surface2 : 'rgba(233,30,140,0.1)',
+                border: `1px solid ${isFirst ? C.border : 'rgba(233,30,140,0.4)'}`,
+                borderRadius: 8,
+                color: isFirst ? C.dimmed : '#e879b0',
+                padding: '8px 18px', cursor: isFirst ? 'not-allowed' : 'pointer',
+                fontSize: 12, fontFamily: "'Courier New', monospace",
+              }}
+            >
+              ← Anterior
+            </button>
+            <span style={{
+              color: C.text, fontSize: 12,
+              background: C.surface2, border: `1px solid ${C.borderLight}`,
+              padding: '8px 16px', borderRadius: 8, minWidth: 80, textAlign: 'center',
+            }}>
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={isLast}
+              style={{
+                background: isLast ? C.surface2 : 'rgba(233,30,140,0.1)',
+                border: `1px solid ${isLast ? C.border : 'rgba(233,30,140,0.4)'}`,
+                borderRadius: 8,
+                color: isLast ? C.dimmed : '#e879b0',
+                padding: '8px 18px', cursor: isLast ? 'not-allowed' : 'pointer',
+                fontSize: 12, fontFamily: "'Courier New', monospace",
+              }}
+            >
+              Siguiente →
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Modal formulario */}
+      {/* Modal */}
       {showForm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 1000 }}>
-          <div style={{ background: '#111', border: '1px solid #222', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 520 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ color: '#fff', fontSize: 16, fontWeight: 900, margin: 0 }}>
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.92)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1rem', zIndex: 1000,
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            background: C.surface,
+            border: `1px solid ${C.borderLight}`,
+            borderRadius: 18, padding: '2rem',
+            width: '100%', maxWidth: 560,
+            maxHeight: '90vh', overflowY: 'auto',
+          }}>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              alignItems: 'center', marginBottom: '1.5rem',
+            }}>
+              <h2 style={{ color: C.text, fontSize: 16, fontWeight: 900, margin: 0 }}>
                 {editReto.id ? '✏️ Editar reto' : '+ Nuevo reto'}
               </h2>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 20 }}>×</button>
+              <button
+                onClick={() => setShowForm(false)}
+                style={{
+                  background: 'none', border: 'none',
+                  color: C.muted, cursor: 'pointer', fontSize: 22,
+                }}
+              >
+                ×
+              </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div>
-                <label style={labelStyle}>MODO</label>
-                <select value={editReto.modo} onChange={e => setEditReto({ ...editReto, modo: e.target.value })} style={inputStyle}>
+                <label style={labelStyle}>Modo</label>
+                <select
+                  value={editReto.modo}
+                  onChange={e => setEditReto({ ...editReto, modo: e.target.value })}
+                  style={inputStyle}
+                >
                   {MODOS.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>TIPO</label>
-                <select value={editReto.tipo} onChange={e => setEditReto({ ...editReto, tipo: e.target.value as 'Verdad' | 'Reto' })} style={inputStyle}>
+                <label style={labelStyle}>Tipo</label>
+                <select
+                  value={editReto.tipo}
+                  onChange={e => setEditReto({ ...editReto, tipo: e.target.value as 'Verdad' | 'Reto' })}
+                  style={inputStyle}
+                >
                   {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
@@ -209,19 +487,28 @@ export default function VORDashboard({ onBack }: Props) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div>
-                <label style={labelStyle}>INTENSIDAD</label>
-                <select value={editReto.intensidad} onChange={e => setEditReto({ ...editReto, intensidad: Number(e.target.value) })} style={inputStyle}>
+                <label style={labelStyle}>Intensidad</label>
+                <select
+                  value={editReto.intensidad}
+                  onChange={e => setEditReto({ ...editReto, intensidad: Number(e.target.value) })}
+                  style={inputStyle}
+                >
                   {INTENSIDADES.map(i => <option key={i} value={i}>{i} — {INTENSIDAD_LABELS[i]}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>TIMER (segundos, 0 = sin timer)</label>
-                <input type="number" min={0} max={300} value={editReto.timer} onChange={e => setEditReto({ ...editReto, timer: Number(e.target.value) })} style={inputStyle} />
+                <label style={labelStyle}>Timer (seg, 0 = sin timer)</label>
+                <input
+                  type="number" min={0} max={300}
+                  value={editReto.timer}
+                  onChange={e => setEditReto({ ...editReto, timer: Number(e.target.value) })}
+                  style={inputStyle}
+                />
               </div>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>TEXTO DEL RETO / VERDAD</label>
+              <label style={labelStyle}>Texto del reto / verdad</label>
               <textarea
                 value={editReto.texto}
                 onChange={e => setEditReto({ ...editReto, texto: e.target.value })}
@@ -229,12 +516,54 @@ export default function VORDashboard({ onBack }: Props) {
                 placeholder="Escribe aquí el reto o la verdad..."
                 style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }}
               />
-              <p style={{ color: '#333', fontSize: 11, margin: '4px 0 0' }}>Usa {'{player}'} para el jugador actual y {'{target}'} para otro jugador aleatorio</p>
+              <p style={{ color: C.dimmed, fontSize: 11, marginTop: 4 }}>
+                Usa {'{player}'} para el jugador actual y {'{target}'} para otro jugador aleatorio
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+              <input
+                type="checkbox"
+                id="activo-check"
+                checked={editReto.activo}
+                onChange={e => setEditReto({ ...editReto, activo: e.target.checked })}
+                style={{ width: 16, height: 16, cursor: 'pointer', accentColor: C.pink }}
+              />
+              <label
+                htmlFor="activo-check"
+                style={{ color: C.muted, fontSize: 12, cursor: 'pointer', letterSpacing: '0.1em' }}
+              >
+                ACTIVO
+              </label>
             </div>
 
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowForm(false)} style={btnSecondary}>Cancelar</button>
-              <button onClick={save} disabled={saving} style={{ ...btnPrimary, opacity: saving ? 0.6 : 1 }}>
+              <button
+                onClick={() => setShowForm(false)}
+                style={{
+                  background: 'none',
+                  border: `1px solid ${C.borderLight}`,
+                  borderRadius: 8, color: '#aaa',
+                  padding: '10px 22px', cursor: 'pointer',
+                  fontSize: 13, fontFamily: "'Courier New', monospace",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={save}
+                disabled={saving}
+                style={{
+                  background: saving ? C.pinkDim : C.pink,
+                  border: `1px solid ${saving ? C.pinkDim : C.pink}`,
+                  borderRadius: 8, color: '#fff',
+                  padding: '10px 26px',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  fontSize: 13, fontWeight: 900,
+                  fontFamily: "'Courier New', monospace",
+                  boxShadow: saving ? 'none' : '0 0 16px rgba(233,30,140,0.3)',
+                }}
+              >
                 {saving ? 'Guardando...' : editReto.id ? 'Actualizar' : 'Agregar reto'}
               </button>
             </div>
