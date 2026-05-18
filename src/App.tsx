@@ -1,11 +1,11 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import VORDashboard from './pages/VORDashboard';
 import BarrioAlerta from './pages/BarrioAlerta';
 import YaVoy from './pages/YaVoy';
 
-export type Screen = 'login' | 'home' | 'vor' | 'barrio';
+// Screen type lives in src/types.ts
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>(() => {
@@ -30,3 +30,4 @@ export default function App() {
 
   return null;
 }
+

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 
 const SUBAPPS = [
   { id: 'cliente', name: 'Ya Voy Cliente', icon: '📱', desc: 'App para pedir comida a domicilio' },
