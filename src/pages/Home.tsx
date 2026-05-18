@@ -51,7 +51,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
     <div style={{
       minHeight: '100vh', width: '100%',
       background: '#050508',
-      fontFamily: "'Courier New', monospace",
+      fontFamily: "'Inter', system-ui, sans-serif",
     }}>
       {/* Grid fondo */}
       <div style={{
@@ -93,7 +93,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
               background: 'none', border: 'none',
               color: '#252535', fontSize: 12,
               cursor: 'pointer', letterSpacing: '0.15em',
-              fontFamily: "'Courier New', monospace",
+              fontFamily: "'Inter', system-ui, sans-serif",
               padding: '0 4px',
             }}
             onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#aaaacc'}

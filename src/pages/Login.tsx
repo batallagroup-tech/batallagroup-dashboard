@@ -28,7 +28,7 @@ export default function Login({ onLogin }: Props) {
       minHeight: '100vh',
       background: '#050508',
       display: 'flex',
-      fontFamily: "'Courier New', monospace",
+      fontFamily: "'Inter', system-ui, sans-serif",
       overflow: 'hidden',
     }}>
       {/* Left panel — branding */}
@@ -193,7 +193,7 @@ export default function Login({ onLogin }: Props) {
             fontWeight: 900, fontSize: 13,
             cursor: loading ? 'not-allowed' : 'pointer',
             letterSpacing: '0.25em',
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "'Inter', system-ui, sans-serif",
             transition: 'all 0.2s',
           }}
           onMouseEnter={e => {

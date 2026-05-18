@@ -1,10 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { min-height: 100vh; width: 100%; }
-body { background: #080810; font-family: 'Courier New', monospace; color: #e8e8ff; }
-input, select, textarea, button { font-family: 'Courier New', monospace; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(233,30,140,0.5) !important; }
-select option { background: #151525; color: #e8e8ff; }
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0e0e1a; }
-::-webkit-scrollbar-thumb { background: #2a2a42; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a52; }
+body { background: #050508; font-family: 'Inter', system-ui, sans-serif; color: #e0e0f0; }
+input, select, textarea, button { font-family: 'Inter', system-ui, sans-serif; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(255,255,255,0.3) !important; }
+select option { background: #0e0e18; color: #e0e0f0; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #07070c; }
+::-webkit-scrollbar-thumb { background: #1e1e2e; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2a2a3e; }

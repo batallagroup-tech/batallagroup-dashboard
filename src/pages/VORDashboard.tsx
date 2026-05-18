@@ -36,14 +36,14 @@ const PAGE_SIZE = 20;
 const C = {
   pink: '#e91e8c',
   pinkDim: '#aa1565',
-  bg: '#080810',
-  surface: '#0e0e1a',
-  surface2: '#151525',
-  border: '#1e1e32',
-  borderLight: '#2a2a42',
-  text: '#e8e8ff',
-  muted: '#6868a0',
-  dimmed: '#3a3a58',
+  bg: '#050508',
+  surface: '#0c0c14',
+  surface2: '#111120',
+  border: '#1e1e30',
+  borderLight: '#32325a',
+  text: '#eeeeff',
+  muted: '#9090b8',
+  dimmed: '#5a5a80',
 };
 
 const inputStyle: React.CSSProperties = {
@@ -54,7 +54,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: 8,
   color: C.text,
   fontSize: 13,
-  fontFamily: "'Courier New', monospace",
+  fontFamily: "'Inter', system-ui, sans-serif",
   outline: 'none',
 };
 
@@ -156,7 +156,7 @@ export default function VORDashboard({ onBack }: Props) {
     <div style={{
       minHeight: '100vh', width: '100%',
       background: C.bg,
-      fontFamily: "'Courier New', monospace",
+      fontFamily: "'Inter', system-ui, sans-serif",
     }}>
       {/* Toast */}
       {toast && (
@@ -184,11 +184,11 @@ export default function VORDashboard({ onBack }: Props) {
           <button
             onClick={onBack}
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              border: `1px solid ${C.borderLight}`,
-              borderRadius: 8, color: '#aaa',
+              background: 'rgba(255,255,255,0.07)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 8, color: '#ccccee',
               padding: '8px 16px', cursor: 'pointer',
-              fontSize: 12, fontFamily: "'Courier New', monospace",
+              fontSize: 12,
             }}
           >
             ← Volver
@@ -210,7 +210,7 @@ export default function VORDashboard({ onBack }: Props) {
             borderRadius: 8, color: '#fff',
             padding: '10px 22px', cursor: 'pointer',
             fontSize: 13, fontWeight: 900,
-            fontFamily: "'Courier New', monospace",
+            fontFamily: "'Inter', system-ui, sans-serif",
             boxShadow: `0 0 16px rgba(233,30,140,0.3)`,
           }}
         >
@@ -398,7 +398,7 @@ export default function VORDashboard({ onBack }: Props) {
                 borderRadius: 8,
                 color: isFirst ? C.dimmed : '#e879b0',
                 padding: '8px 18px', cursor: isFirst ? 'not-allowed' : 'pointer',
-                fontSize: 12, fontFamily: "'Courier New', monospace",
+                fontSize: 12, fontFamily: "'Inter', system-ui, sans-serif",
               }}
             >
               ← Anterior
@@ -419,7 +419,7 @@ export default function VORDashboard({ onBack }: Props) {
                 borderRadius: 8,
                 color: isLast ? C.dimmed : '#e879b0',
                 padding: '8px 18px', cursor: isLast ? 'not-allowed' : 'pointer',
-                fontSize: 12, fontFamily: "'Courier New', monospace",
+                fontSize: 12, fontFamily: "'Inter', system-ui, sans-serif",
               }}
             >
               Siguiente →
@@ -545,7 +545,7 @@ export default function VORDashboard({ onBack }: Props) {
                   border: `1px solid ${C.borderLight}`,
                   borderRadius: 8, color: '#aaa',
                   padding: '10px 22px', cursor: 'pointer',
-                  fontSize: 13, fontFamily: "'Courier New', monospace",
+                  fontSize: 13, fontFamily: "'Inter', system-ui, sans-serif",
                 }}
               >
                 Cancelar
@@ -560,7 +560,7 @@ export default function VORDashboard({ onBack }: Props) {
                   padding: '10px 26px',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   fontSize: 13, fontWeight: 900,
-                  fontFamily: "'Courier New', monospace",
+                  fontFamily: "'Inter', system-ui, sans-serif",
                   boxShadow: saving ? 'none' : '0 0 16px rgba(233,30,140,0.3)',
                 }}
               >
