@@ -98,6 +98,19 @@ const QUICKLINKS = [
 export default function Home({ onNavigate, onLogout }: Props) {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [pinnedApps, setPinnedApps] = useState<string[]>([]);
+
+  const togglePin = (id: string) => {
+    setPinnedApps(prev =>
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const sortedApps = [...APPS].sort((a, b) => {
+    const pa = pinnedApps.includes(a.id) ? 0 : 1;
+    const pb = pinnedApps.includes(b.id) ? 0 : 1;
+    return pa - pb;
+  });
 
   const now = new Date().toLocaleDateString('es-MX', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
@@ -216,7 +229,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
           <p style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>━━ APLICACIONES CONECTADAS</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 14, marginBottom: 32 }}>
-          {APPS.map(app => (
+          {sortedApps.map(app => (
             <div
               key={app.id}
               onClick={() => onNavigate(app.id)}
@@ -232,6 +245,14 @@ export default function Home({ onNavigate, onLogout }: Props) {
               }}
             >
               <div style={{ position: 'absolute', top: 0, left: '20%', right: '20%', height: 1, background: app.topLine, opacity: 0.5 }} />
+              {pinnedApps.includes(app.id) && (
+                <div style={{
+                  position: 'absolute', top: 8, left: 12,
+                  background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 4, padding: '2px 7px',
+                  color: '#9090c0', fontSize: 8, letterSpacing: '0.3em', fontWeight: 700,
+                }}>FIJADA</div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
                 <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
                   <div style={{
@@ -245,7 +266,24 @@ export default function Home({ onNavigate, onLogout }: Props) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-                  <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>→</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      onClick={e => { e.stopPropagation(); togglePin(app.id); }}
+                      title={pinnedApps.includes(app.id) ? 'Desfijar' : 'Fijar arriba'}
+                      style={{
+                        background: pinnedApps.includes(app.id) ? `${app.color}22` : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${pinnedApps.includes(app.id) ? app.color + '60' : 'rgba(255,255,255,0.08)'}`,
+                        borderRadius: 7, width: 28, height: 28,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', transition: 'all 0.2s', padding: 0,
+                        fontSize: 13,
+                        color: pinnedApps.includes(app.id) ? app.color : '#4a4a78',
+                      }}
+                    >
+                      {pinnedApps.includes(app.id) ? '📌' : '📍'}
+                    </button>
+                    <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>→</span>
+                  </div>
                   <span style={{
                     background: `${app.statusColor}18`, border: `1px solid ${app.statusColor}40`,
                     borderRadius: 6, padding: '2px 8px',

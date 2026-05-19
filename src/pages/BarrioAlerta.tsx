@@ -71,8 +71,7 @@ interface Stats {
   sensitiveCount: number;
 }
 
-type Tab = 'overview' | 'incidents' | 'notices' | 'users' | 'create';
-type CreateType = 'incident' | 'notice';
+type Tab = 'overview' | 'incidents' | 'notices' | 'users' | 'phones';
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -105,7 +104,7 @@ const S = {
   page: {
     minHeight: '100vh', width: '100%',
     background: '#080810',
-    fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
+    fontFamily: "'Inter', system-ui, sans-serif",
     color: '#c8c8e8',
   } as React.CSSProperties,
   header: {
@@ -127,7 +126,7 @@ const S = {
     borderRadius: 8, color,
     padding: '8px 18px', cursor: 'pointer',
     fontSize: 12, fontWeight: 700,
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: "'Inter', system-ui, sans-serif",
     transition: 'all 0.15s',
   } as React.CSSProperties),
   btnDanger: {
@@ -136,7 +135,7 @@ const S = {
     borderRadius: 8, color: '#ef4444',
     padding: '6px 14px', cursor: 'pointer',
     fontSize: 11, fontWeight: 700,
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: "'Inter', system-ui, sans-serif",
   } as React.CSSProperties,
   input: {
     background: 'rgba(255,255,255,0.04)',
@@ -144,7 +143,7 @@ const S = {
     borderRadius: 8, color: '#c8c8e8',
     padding: '10px 14px', width: '100%',
     fontSize: 13,
-    fontFamily: "'JetBrains Mono', monospace",
+    fontFamily: "'Inter', system-ui, sans-serif",
     outline: 'none',
     boxSizing: 'border-box' as const,
   },
@@ -219,7 +218,7 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'incidents',  label: 'Incidentes', icon: '⚠' },
   { id: 'notices',    label: 'Avisos',     icon: '📢' },
   { id: 'users',      label: 'Usuarios',   icon: '👤' },
-  { id: 'create',     label: 'Crear',      icon: '+' },
+  { id: 'phones',     label: 'Teléfonos',  icon: '📞' },
 ];
 
 // ─── Overview ─────────────────────────────────────────────────────────────────
@@ -620,214 +619,253 @@ function Users() {
 
 // ─── Create ───────────────────────────────────────────────────────────────────
 
-function Create() {
-  const [type, setType] = useState<CreateType>('incident');
-  const [saving, setSaving] = useState(false);
-  const [ok, setOk] = useState(false);
-  const [err, setErr] = useState('');
+// ─── Directorio de Teléfonos ──────────────────────────────────────────────────
 
-  // Incident form
-  const [iTitle, setITitle] = useState('');
-  const [iDesc, setIDesc] = useState('');
-  const [iCat, setICat] = useState<Category>('Notice');
-  const [iLat, setILat] = useState('');
-  const [iLng, setILng] = useState('');
-  const [iSOS, setISOS] = useState(false);
-  const [iSensitive, setISensitive] = useState(false);
+interface PhoneEntry {
+  id: string;
+  name: string;
+  number: string;
+  location: string;
+  lat: string;
+  lng: string;
+  type: 'policia' | 'emergencia' | 'municipal' | 'otro';
+  notes: string;
+}
 
-  // Notice form
-  const [nTitle, setNTitle] = useState('');
-  const [nBody, setNBody] = useState('');
-  const [nCat, setNCat] = useState<NoticeCategory>('General');
-  const [nLat, setNLat] = useState('');
-  const [nLng, setNLng] = useState('');
+const TYPE_LABELS: Record<PhoneEntry['type'], string> = {
+  policia: '👮 Policía',
+  emergencia: '🚑 Emergencia',
+  municipal: '🏛️ Municipal',
+  otro: '📞 Otro',
+};
 
-  const reset = () => {
-    setITitle(''); setIDesc(''); setICat('Notice');
-    setILat(''); setILng(''); setISOS(false); setISensitive(false);
-    setNTitle(''); setNBody(''); setNCat('General'); setNLat(''); setNLng('');
-    setErr(''); setOk(false);
+const TYPE_COLORS: Record<PhoneEntry['type'], string> = {
+  policia: '#3b82f6',
+  emergencia: '#ef4444',
+  municipal: '#f59e0b',
+  otro: '#6060a0',
+};
+
+const PHONE_PLACEHOLDER: PhoneEntry[] = [
+  { id: '1', name: 'Policía Municipal Tulancingo', number: '771-717-0000', location: 'Tulancingo, Hidalgo', lat: '20.0853', lng: '-98.3625', type: 'policia', notes: 'Central principal' },
+  { id: '2', name: 'Policía Estatal Hidalgo', number: '771-714-1111', location: 'Pachuca, Hidalgo', lat: '20.1011', lng: '-98.7591', type: 'policia', notes: '' },
+  { id: '3', name: 'Cruz Roja Tulancingo', number: '771-717-0068', location: 'Tulancingo, Hidalgo', lat: '20.0853', lng: '-98.3625', type: 'emergencia', notes: 'Servicio 24h' },
+  { id: '4', name: 'Bomberos Municipales', number: '771-717-2233', location: 'Tulancingo, Hidalgo', lat: '20.0853', lng: '-98.3625', type: 'emergencia', notes: '' },
+  { id: '5', name: 'Protección Civil Hidalgo', number: '800-727-2828', location: 'Hidalgo (estatal)', lat: '20.1011', lng: '-98.7591', type: 'municipal', notes: 'Número gratuito' },
+];
+
+function PhoneDirectory() {
+  const [phones, setPhones] = useState<PhoneEntry[]>(PHONE_PLACEHOLDER);
+  const [showForm, setShowForm] = useState(false);
+  const [filter, setFilter] = useState<PhoneEntry['type'] | 'all'>('all');
+  const [search, setSearch] = useState('');
+
+  // New entry form state
+  const [fName, setFName] = useState('');
+  const [fNumber, setFNumber] = useState('');
+  const [fLocation, setFLocation] = useState('');
+  const [fLat, setFLat] = useState('');
+  const [fLng, setFLng] = useState('');
+  const [fType, setFType] = useState<PhoneEntry['type']>('policia');
+  const [fNotes, setFNotes] = useState('');
+  const [fErr, setFErr] = useState('');
+
+  const resetForm = () => {
+    setFName(''); setFNumber(''); setFLocation('');
+    setFLat(''); setFLng(''); setFType('policia'); setFNotes(''); setFErr('');
   };
 
-  const handleSave = async () => {
-    setSaving(true); setErr(''); setOk(false);
-    try {
-      if (type === 'incident') {
-        if (!iTitle.trim() || !iDesc.trim()) throw new Error('Título y descripción son requeridos');
-        const lat = parseFloat(iLat) || 0;
-        const lng = parseFloat(iLng) || 0;
-        const { error } = await supabase.from('incidents').insert({
-          user_id: null,
-          user_name: 'Administrador',
-          user_photo: null,
-          category: iCat,
-          title: iTitle.trim(),
-          description: iDesc.trim(),
-          lat, lng,
-          image_url: null,
-          image_urls: [],
-          is_sensitive: iSensitive,
-          is_sos: iSOS,
-          broadcast_radius_km: 5,
-          verified_count: 0,
-          report_count: 0,
-          verified_by: [],
-        });
-        if (error) throw error;
-      } else {
-        if (!nTitle.trim() || !nBody.trim()) throw new Error('Título y cuerpo son requeridos');
-        const lat = nLat ? parseFloat(nLat) : null;
-        const lng = nLng ? parseFloat(nLng) : null;
-        const { error } = await supabase.from('notices').insert({
-          user_id: '00000000-0000-0000-0000-000000000000',
-          user_name: 'Administrador',
-          user_photo: null,
-          title: nTitle.trim(),
-          body: nBody.trim(),
-          category: nCat,
-          lat, lng,
-        });
-        if (error) throw error;
-      }
-      setOk(true);
-      reset();
-    } catch (e: any) {
-      setErr(e.message ?? 'Error desconocido');
+  const handleAdd = () => {
+    if (!fName.trim() || !fNumber.trim() || !fLocation.trim()) {
+      setFErr('Nombre, número y ubicación son obligatorios.');
+      return;
     }
-    setSaving(false);
+    const entry: PhoneEntry = {
+      id: Date.now().toString(),
+      name: fName.trim(),
+      number: fNumber.trim(),
+      location: fLocation.trim(),
+      lat: fLat.trim(),
+      lng: fLng.trim(),
+      type: fType,
+      notes: fNotes.trim(),
+    };
+    setPhones(prev => [entry, ...prev]);
+    resetForm();
+    setShowForm(false);
   };
 
-  const inputStyle = { ...S.input, marginBottom: 14 };
-  const labelStyle = { ...S.label, marginBottom: 4, marginTop: 4 };
+  const handleDelete = (id: string) => setPhones(prev => prev.filter(p => p.id !== id));
+
+  const filtered = phones.filter(p => {
+    const matchType = filter === 'all' || p.type === filter;
+    const matchSearch = !search || 
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.number.includes(search) ||
+      p.location.toLowerCase().includes(search.toLowerCase());
+    return matchType && matchSearch;
+  });
+
+  const inputS = { ...S.input, marginBottom: 0 };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20 }}>
-      {/* Selector de tipo */}
-      <div>
-        <p style={S.section}>━━ TIPO</p>
-        {(['incident', 'notice'] as CreateType[]).map(t => (
-          <button
-            key={t}
-            onClick={() => { setType(t); reset(); }}
-            style={{
-              ...S.btn(type === t ? '#3b82f6' : '#6060a0'),
-              width: '100%', marginBottom: 8, textAlign: 'left' as const,
-              opacity: type === t ? 1 : 0.5,
-            }}
-          >
-            {t === 'incident' ? '⚠ Incidente' : '📢 Aviso comunitario'}
-          </button>
-        ))}
-
-        <div style={{ marginTop: 20, ...S.card }}>
-          <p style={S.section}>━━ COMANDOS ÚTILES</p>
-          <PSBox label="Abrir Supabase Studio" cmd="Start-Process 'https://supabase.com/dashboard/project/kndhnywjtfyhivuxnhag'" />
-          <PSBox label="Ver tablas" cmd="cd C:\Proyectos\personal\barrioalerta; cat .env" />
+    <div>
+      {/* Header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div>
+          <p style={S.section}>━━ DIRECTORIO DE EMERGENCIAS</p>
+          <p style={{ color: '#7070b0', fontSize: 12, margin: 0 }}>
+            Números mostrados en la app según ubicación y cercanía del usuario.{' '}
+            <span style={{ color: '#4a4a80', fontSize: 11 }}>(Pendiente de conectar a BD)</span>
+          </p>
         </div>
+        <button
+          onClick={() => { setShowForm(!showForm); resetForm(); }}
+          style={{ ...S.btn('#22c55e'), padding: '10px 20px', fontSize: 13 }}
+        >
+          {showForm ? '✕ Cancelar' : '+ Agregar número'}
+        </button>
       </div>
 
-      {/* Formulario */}
-      <div style={S.card}>
-        <p style={S.section}>━━ {type === 'incident' ? 'NUEVO INCIDENTE' : 'NUEVO AVISO'}</p>
+      {/* Add form */}
+      {showForm && (
+        <div style={{ ...S.card, marginBottom: 20, borderColor: 'rgba(34,197,94,0.2)', borderWidth: 1 }}>
+          <p style={{ ...S.section, marginBottom: 16 }}>━━ NUEVO NÚMERO DE EMERGENCIA</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div>
+              <label style={S.label}>NOMBRE / INSTITUCIÓN *</label>
+              <input style={inputS} value={fName} onChange={e => setFName(e.target.value)}
+                placeholder="Ej. Policía Municipal Tulancingo" />
+            </div>
+            <div>
+              <label style={S.label}>NÚMERO TELEFÓNICO *</label>
+              <input style={inputS} value={fNumber} onChange={e => setFNumber(e.target.value)}
+                placeholder="771-717-0000" />
+            </div>
+            <div>
+              <label style={S.label}>TIPO</label>
+              <select
+                value={fType}
+                onChange={e => setFType(e.target.value as PhoneEntry['type'])}
+                style={{ ...inputS, cursor: 'pointer' }}
+              >
+                {(Object.keys(TYPE_LABELS) as PhoneEntry['type'][]).map(t => (
+                  <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={S.label}>NOTAS (opcional)</label>
+              <input style={inputS} value={fNotes} onChange={e => setFNotes(e.target.value)}
+                placeholder="Ej. Servicio 24h, número gratuito…" />
+            </div>
+          </div>
 
-        {type === 'incident' ? (
-          <>
-            <label style={labelStyle}>CATEGORÍA</label>
-            <select style={{ ...inputStyle }} value={iCat} onChange={e => setICat(e.target.value as Category)}>
-              {INCIDENT_CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>)}
-            </select>
-
-            <label style={labelStyle}>TÍTULO *</label>
-            <input style={inputStyle} value={iTitle} onChange={e => setITitle(e.target.value)} placeholder="Ej: Robo a mano armada" />
-
-            <label style={labelStyle}>DESCRIPCIÓN *</label>
-            <textarea
-              style={{ ...inputStyle, minHeight: 80, resize: 'vertical' as const }}
-              value={iDesc}
-              onChange={e => setIDesc(e.target.value)}
-              placeholder="Describe el incidente con detalle…"
-            />
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div>
-                <label style={labelStyle}>LATITUD</label>
-                <input style={inputStyle} value={iLat} onChange={e => setILat(e.target.value)} placeholder="19.8979" />
+          <div style={{ marginTop: 14, padding: '14px 16px', background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', borderRadius: 10 }}>
+            <p style={{ ...S.section, marginBottom: 12, color: '#6090c0' }}>━━ UBICACIÓN (para mostrar por cercanía)</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={S.label}>CIUDAD / ZONA *</label>
+                <input style={inputS} value={fLocation} onChange={e => setFLocation(e.target.value)}
+                  placeholder="Ej. Tulancingo, Hidalgo" />
               </div>
               <div>
-                <label style={labelStyle}>LONGITUD</label>
-                <input style={inputStyle} value={iLng} onChange={e => setILng(e.target.value)} placeholder="-98.1235" />
+                <label style={S.label}>LATITUD (opcional)</label>
+                <input style={inputS} value={fLat} onChange={e => setFLat(e.target.value)}
+                  placeholder="20.0853" type="number" step="any" />
+              </div>
+              <div>
+                <label style={S.label}>LONGITUD (opcional)</label>
+                <input style={inputS} value={fLng} onChange={e => setFLng(e.target.value)}
+                  placeholder="-98.3625" type="number" step="any" />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <p style={{ color: '#4a6080', fontSize: 11, margin: 0, lineHeight: 1.5 }}>
+                  Las coordenadas permiten ordenar resultados por distancia al usuario.
+                </p>
               </div>
             </div>
+          </div>
 
-            <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#8080a8', fontSize: 12 }}>
-                <input type="checkbox" checked={iSOS} onChange={e => setISOS(e.target.checked)} />
-                🚨 Marcar como SOS
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#8080a8', fontSize: 12 }}>
-                <input type="checkbox" checked={iSensitive} onChange={e => setISensitive(e.target.checked)} />
-                🔒 Contenido sensible (oculto)
-              </label>
-            </div>
-          </>
-        ) : (
-          <>
-            <label style={labelStyle}>CATEGORÍA</label>
-            <select style={{ ...inputStyle }} value={nCat} onChange={e => setNCat(e.target.value as NoticeCategory)}>
-              {NOTICE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
+          {fErr && (
+            <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, marginBottom: 0 }}>⚠ {fErr}</p>
+          )}
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <button onClick={handleAdd} style={{ ...S.btn('#22c55e'), padding: '10px 24px' }}>
+              ✓ Guardar número
+            </button>
+            <button onClick={() => { setShowForm(false); resetForm(); }} style={{ ...S.btn('#6060a0'), padding: '10px 20px' }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
-            <label style={labelStyle}>TÍTULO *</label>
-            <input style={inputStyle} value={nTitle} onChange={e => setNTitle(e.target.value)} placeholder="Ej: Corte de agua Colonia Centro" />
+      {/* Filters + Search */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
+        <input
+          style={{ ...S.input, width: 240, marginBottom: 0 }}
+          placeholder="Buscar nombre, número o ciudad…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(['all', ...Object.keys(TYPE_LABELS)] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setFilter(t as any)}
+              style={{
+                ...S.btn(t === 'all' ? '#6060a0' : TYPE_COLORS[t as PhoneEntry['type']]),
+                padding: '7px 14px',
+                opacity: filter === t ? 1 : 0.45,
+                fontSize: 11,
+              }}
+            >
+              {t === 'all' ? 'Todos' : TYPE_LABELS[t as PhoneEntry['type']]}
+            </button>
+          ))}
+        </div>
+        <span style={{ color: '#5050a0', fontSize: 11, marginLeft: 'auto' }}>
+          {filtered.length} registro{filtered.length !== 1 ? 's' : ''}
+        </span>
+      </div>
 
-            <label style={labelStyle}>CUERPO *</label>
-            <textarea
-              style={{ ...inputStyle, minHeight: 100, resize: 'vertical' as const }}
-              value={nBody}
-              onChange={e => setNBody(e.target.value)}
-              placeholder="Detalla el aviso para la comunidad…"
-            />
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div>
-                <label style={labelStyle}>LATITUD (opcional)</label>
-                <input style={inputStyle} value={nLat} onChange={e => setNLat(e.target.value)} placeholder="19.8979" />
-              </div>
-              <div>
-                <label style={labelStyle}>LONGITUD (opcional)</label>
-                <input style={inputStyle} value={nLng} onChange={e => setNLng(e.target.value)} placeholder="-98.1235" />
-              </div>
-            </div>
-          </>
-        )}
-
-        {err && (
-          <div style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 12 }}>
-            <p style={{ color: '#ef4444', fontSize: 12, margin: 0 }}>⚠ {err}</p>
+      {/* Phone list */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {filtered.length === 0 && (
+          <div style={{ ...S.card, textAlign: 'center', color: '#4a4a80', padding: '32px' }}>
+            Sin resultados para esta búsqueda.
           </div>
         )}
-
-        {ok && (
-          <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 12 }}>
-            <p style={{ color: '#22c55e', fontSize: 12, margin: 0 }}>✓ Publicado correctamente en Supabase. Se verá en la app al instante.</p>
+        {filtered.map(p => (
+          <div key={p.id} style={{ ...S.row, alignItems: 'center', gap: 16 }}>
+            <span style={S.tag(TYPE_COLORS[p.type])}>{TYPE_LABELS[p.type]}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ color: '#d0d0f0', fontSize: 14, fontWeight: 700, margin: '0 0 2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {p.name}
+              </p>
+              <p style={{ color: '#6060a0', fontSize: 11, margin: 0 }}>
+                📍 {p.location}
+                {p.lat && p.lng && <span style={{ color: '#4a4a70', marginLeft: 8 }}>({p.lat}, {p.lng})</span>}
+                {p.notes && <span style={{ color: '#5a5a90', marginLeft: 12 }}>· {p.notes}</span>}
+              </p>
+            </div>
+            <a
+              href={`tel:${p.number.replace(/[^0-9+]/g,'')}`}
+              style={{ ...S.btn('#3b82f6'), padding: '6px 16px', textDecoration: 'none', fontSize: 13, fontWeight: 900 }}
+            >
+              📞 {p.number}
+            </a>
+            <button onClick={() => handleDelete(p.id)} style={{ ...S.btnDanger, padding: '6px 12px', fontSize: 12 }}>
+              ✕
+            </button>
           </div>
-        )}
-
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          style={{ ...S.btn('#3b82f6'), fontSize: 13, padding: '12px 28px', opacity: saving ? 0.6 : 1 }}
-        >
-          {saving ? 'Guardando…' : '✓ Publicar en BarrioAlerta'}
-        </button>
+        ))}
       </div>
     </div>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
-interface Props { onBack: () => void; }
 
 export default function BarrioAlerta({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('overview');
@@ -920,7 +958,7 @@ export default function BarrioAlerta({ onBack }: Props) {
         {tab === 'incidents' && <Incidents incidents={incidents} loading={loading} onRefresh={loadIncidents} />}
         {tab === 'notices'   && <Notices loading={loading} onRefresh={loadIncidents} />}
         {tab === 'users'     && <Users />}
-        {tab === 'create'    && <Create />}
+        {tab === 'phones'    && <PhoneDirectory />}
       </div>
     </div>
   );
