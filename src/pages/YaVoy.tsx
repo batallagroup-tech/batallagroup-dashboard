@@ -47,7 +47,7 @@ export default function YaVoy({ onBack }: Props) {
       </div>
       <div style={{ padding: '48px 40px' }}>
         <div style={{ marginBottom: 36 }}>
-          <p style={{ color: '#1e1e2e', fontSize: 11, letterSpacing: '0.35em', marginBottom: 8 }}>━━ APLICACIONES</p>
+          <p style={{ color: '#4a4a80', fontSize: 11, letterSpacing: '0.35em', marginBottom: 8 }}>━━ APLICACIONES</p>
           <h2 style={{ color: '#ffffff', fontSize: 32, fontWeight: 900, margin: 0, letterSpacing: '1px' }}>Ya Voy!</h2>
           <p style={{ color: '#3a3a50', fontSize: 13, marginTop: 8 }}>Selecciona una aplicación para administrar</p>
         </div>

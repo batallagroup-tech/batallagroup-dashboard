@@ -166,7 +166,7 @@ const S = {
     border: '1px solid rgba(255,255,255,0.04)',
     borderRadius: 10, marginBottom: 8,
   } as React.CSSProperties,
-  section: { color: '#2a2a48', fontSize: 10, letterSpacing: '0.35em', margin: '0 0 14px' } as React.CSSProperties,
+  section: { color: '#6060a0', fontSize: 10, letterSpacing: '0.35em', margin: '0 0 14px' } as React.CSSProperties,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ function Overview({ stats, incidents, loading }: { stats: Stats; incidents: Inci
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>
         {KPIs.map(k => (
           <div key={k.label} style={{ ...S.card, borderLeft: `3px solid ${k.color}` }}>
-            <p style={{ color: '#2a2a48', fontSize: 10, letterSpacing: '0.2em', margin: '0 0 6px' }}>
+            <p style={{ color: '#6060a0', fontSize: 10, letterSpacing: '0.2em', margin: '0 0 6px' }}>
               {k.icon} {k.label.toUpperCase()}
             </p>
             <p style={{ color: '#fff', fontSize: 30, fontWeight: 900, margin: 0, lineHeight: 1 }}>
@@ -293,7 +293,7 @@ function Overview({ stats, incidents, loading }: { stats: Stats; incidents: Inci
                   <p style={{ color: '#a0a0c8', fontSize: 12, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {i.title}
                   </p>
-                  <p style={{ color: '#2a2a48', fontSize: 10, margin: 0 }}>{fmtDateShort(i.created_at)} · {i.user_name ?? 'Anónimo'}</p>
+                  <p style={{ color: '#6060a0', fontSize: 10, margin: 0 }}>{fmtDateShort(i.created_at)} · {i.user_name ?? 'Anónimo'}</p>
                 </div>
                 {i.is_sos && <span style={S.tag('#ef4444')}>SOS</span>}
                 {i.is_sensitive && <span style={S.tag('#94a3b8')}>🔒</span>}
@@ -601,14 +601,14 @@ function Users() {
                   {u.full_name ?? 'Sin nombre'}
                 </p>
                 <p style={{ color: '#4a4a6a', fontSize: 11, margin: '0 0 2px' }}>{u.email ?? 'Sin email'}</p>
-                <p style={{ color: '#2a2a48', fontSize: 10, margin: 0 }}>
+                <p style={{ color: '#6060a0', fontSize: 10, margin: 0 }}>
                   Desde {fmtDateShort(u.created_at)} · Último: {u.last_seen ? fmtDateShort(u.last_seen) : '—'}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' as const, flexShrink: 0 }}>
                 <span style={S.tag('#8b5cf6')}>Nv. {lvl}</span>
                 <span style={S.tag('#3b82f6')}>{pts} pts</span>
-                <span style={{ ...S.tag('#2a2a48'), fontSize: 9 }}>{u.id.slice(0, 8)}…</span>
+                <span style={{ ...S.tag('#6060a0'), fontSize: 9 }}>{u.id.slice(0, 8)}…</span>
                 <button onClick={() => handleDelete(u.id)} style={S.btnDanger}>🗑</button>
               </div>
             </div>
@@ -710,7 +710,7 @@ function Create() {
             key={t}
             onClick={() => { setType(t); reset(); }}
             style={{
-              ...S.btn(type === t ? '#3b82f6' : '#2a2a48'),
+              ...S.btn(type === t ? '#3b82f6' : '#6060a0'),
               width: '100%', marginBottom: 8, textAlign: 'left' as const,
               opacity: type === t ? 1 : 0.5,
             }}
@@ -888,7 +888,7 @@ export default function BarrioAlerta({ onBack }: Props) {
             <h1 style={{ color: '#e0e0ff', fontSize: 17, fontWeight: 900, margin: 0, letterSpacing: 1 }}>
               🚨 BarrioAlerta — Admin
             </h1>
-            <p style={{ color: '#2a2a48', fontSize: 10, margin: '2px 0 0', letterSpacing: '0.2em' }}>
+            <p style={{ color: '#6060a0', fontSize: 10, margin: '2px 0 0', letterSpacing: '0.2em' }}>
               PANEL DE ADMINISTRACIÓN · SUPABASE LIVE
             </p>
           </div>
@@ -906,7 +906,7 @@ export default function BarrioAlerta({ onBack }: Props) {
             key={t.id}
             onClick={() => setTab(t.id)}
             style={{
-              ...S.btn(tab === t.id ? '#3b82f6' : '#2a2a48'),
+              ...S.btn(tab === t.id ? '#3b82f6' : '#6060a0'),
               opacity: tab === t.id ? 1 : 0.5,
               padding: '8px 18px',
             }}

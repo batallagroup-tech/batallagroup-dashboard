@@ -89,7 +89,7 @@ export default function Login({ onLogin }: Props) {
           </div>
 
           <div style={{ borderLeft: '2px solid rgba(255,255,255,0.12)', paddingLeft: 20 }}>
-            <p style={{ color: '#404050', fontSize: 12, margin: 0, lineHeight: 1.8, letterSpacing: '0.05em' }}>
+            <p style={{ color: '#7878a8', fontSize: 12, margin: 0, lineHeight: 1.8, letterSpacing: '0.05em' }}>
               Panel de administración<br />
               acceso restringido
             </p>
@@ -110,13 +110,13 @@ export default function Login({ onLogin }: Props) {
           <h2 style={{ color: '#ffffff', fontSize: 22, fontWeight: 900, margin: '0 0 8px', letterSpacing: '1px' }}>
             Acceder
           </h2>
-          <p style={{ color: '#2a2a3a', fontSize: 12, margin: 0, letterSpacing: '0.1em' }}>
+          <p style={{ color: '#6868a0', fontSize: 12, margin: 0, letterSpacing: '0.1em' }}>
             Introduce tus credenciales
           </p>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ color: '#303045', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
+          <label style={{ color: '#6868a8', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
             CORREO ELECTRÓNICO
           </label>
           <input
@@ -138,7 +138,7 @@ export default function Login({ onLogin }: Props) {
         </div>
 
         <div style={{ marginBottom: 32, position: 'relative' }}>
-          <label style={{ color: '#303045', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
+          <label style={{ color: '#6868a8', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
             CONTRASEÑA
           </label>
           <input
@@ -162,7 +162,7 @@ export default function Login({ onLogin }: Props) {
             style={{
               position: 'absolute', right: 14, top: 38,
               background: 'none', border: 'none',
-              color: '#2a2a3a', cursor: 'pointer', fontSize: 15,
+              color: '#5858a0', cursor: 'pointer', fontSize: 15,
             }}
           >
             {showPass ? '🙈' : '👁️'}
@@ -212,7 +212,7 @@ export default function Login({ onLogin }: Props) {
           {loading ? 'VERIFICANDO...' : 'ENTRAR →'}
         </button>
 
-        <p style={{ color: '#1a1a28', fontSize: 11, marginTop: 32, textAlign: 'center', letterSpacing: '0.1em' }}>
+        <p style={{ color: '#4a4a80', fontSize: 11, marginTop: 32, textAlign: 'center', letterSpacing: '0.1em' }}>
           © 2026 BatallaGroup. Acceso restringido.
         </p>
       </div>
