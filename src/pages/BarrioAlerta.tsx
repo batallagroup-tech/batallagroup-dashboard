@@ -89,9 +89,6 @@ const CATEGORY_COLORS: Record<Category, string> = {
   Health: '#fb7185', Other: '#64748b', SOS: '#ef4444',
 };
 
-const NOTICE_CATEGORIES: NoticeCategory[] = [
-  'Corte de luz', 'Obras', 'Evento', 'Agua', 'Transporte', 'General',
-];
 
 const INCIDENT_CATEGORIES: Category[] = [
   'Crime', 'Accident', 'Missing', 'Notice', 'Sanitary', 'Environment',
@@ -866,6 +863,8 @@ function PhoneDirectory() {
   );
 }
 
+
+interface Props { onBack: () => void; }
 
 export default function BarrioAlerta({ onBack }: Props) {
   const [tab, setTab] = useState<Tab>('overview');
