@@ -98,21 +98,13 @@ const QUICKLINKS = [
 export default function Home({ onNavigate, onLogout }: Props) {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [pinnedApps, setPinnedApps] = useState<string[]>([]);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const toggleFullscreen = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const [pinnedApps, setPinnedApps] = useState<string[]>([]);    e.stopPropagation();
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
     } else {
       document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
   };
-
-  if (typeof window !== 'undefined') {
-    document.onfullscreenchange = () => setIsFullscreen(!!document.fullscreenElement);
-  }
 
   const togglePin = (id: string) => {
     setPinnedApps(prev =>
@@ -296,22 +288,6 @@ export default function Home({ onNavigate, onLogout }: Props) {
                     >
                       {pinnedApps.includes(app.id) ? '📌' : '📍'}
                     </button>
-                    {app.id === 'barrio' && (
-                      <button
-                        onClick={toggleFullscreen}
-                        title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-                        style={{
-                          background: isFullscreen ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${isFullscreen ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
-                          borderRadius: 7, width: 28, height: 28,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', transition: 'all 0.2s', padding: 0,
-                          fontSize: 14, color: isFullscreen ? '#3b82f6' : '#4a4a78',
-                        }}
-                      >
-                        {isFullscreen ? '⛶' : '⛶'}
-                      </button>
-                    )}
                     <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>→</span>
                   </div>
                   <span style={{
