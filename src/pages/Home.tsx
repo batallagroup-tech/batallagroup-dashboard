@@ -98,11 +98,7 @@ const QUICKLINKS = [
 export default function Home({ onNavigate, onLogout }: Props) {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [pinnedApps, setPinnedApps] = useState<string[]>([]);    e.stopPropagation();
-    if (!document.fullscreenElement) {
-    } else {
-    }
-  };
+  const [pinnedApps, setPinnedApps] = useState<string[]>([]);
 
   const togglePin = (id: string) => {
     setPinnedApps(prev =>
