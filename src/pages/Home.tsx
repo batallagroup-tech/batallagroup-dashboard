@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import type { Theme } from '../App';
 import type { Screen } from '../types';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
+  theme: Theme;
   notifBell?: React.ReactNode;
   onSearch?: () => void;
 }
