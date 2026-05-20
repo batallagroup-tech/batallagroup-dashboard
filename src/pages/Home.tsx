@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import type { Theme } from '../App';
 import type { Screen } from '../types';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
-  theme: Theme;
   notifBell?: React.ReactNode;
   onSearch?: () => void;
 }
@@ -156,7 +154,7 @@ const QUICKLINKS = [
   { label: 'Documentación', url: '#', icon: '📄' },
 ];
 
-export default function Home({ onNavigate, onLogout, theme, notifBell, onSearch }: Props) {
+export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Props) {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [pinnedApps, setPinnedApps] = useState<string[]>([]);
