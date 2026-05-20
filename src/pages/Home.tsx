@@ -154,7 +154,7 @@ const QUICKLINKS = [
   { label: 'Documentación', url: '#', icon: '📄' },
 ];
 
-export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Props) {
+export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme }: Props) {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [pinnedApps, setPinnedApps] = useState<string[]>([]);
