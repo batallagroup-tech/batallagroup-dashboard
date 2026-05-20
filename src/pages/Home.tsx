@@ -183,7 +183,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
       minHeight: '100vh', width: '100%',
       background: '#050508',
       fontFamily: "'Inter', system-ui, sans-serif",
-      color: '#eeeeff',
+      color: theme.text,
     }}>
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
@@ -202,11 +202,11 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <div style={{ display: 'flex', alignItems: 'baseline' }}>
-            <span style={{ color: '#fff', fontSize: 17, fontWeight: 900, letterSpacing: '3px' }}>BATALLA</span>
-            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 17, fontWeight: 900, letterSpacing: '3px' }}>GROUP</span>
+            <span style={{ color: theme.text, fontSize: 17, fontWeight: 900, letterSpacing: '3px' }}>BATALLA</span>
+            <span style={{ color: theme.textMuted, fontSize: 17, fontWeight: 900, letterSpacing: '3px' }}>GROUP</span>
           </div>
           <div style={{ width: 1, height: 20, background: '#111120' }} />
-          <span style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÓN</span>
+          <span style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÓN</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -215,12 +215,12 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
             <span style={{ color: '#22c55e', fontSize: 10, letterSpacing: '0.2em', fontWeight: 600 }}>TODOS LOS SISTEMAS OK</span>
           </div>
           <div style={{ width: 1, height: 20, background: '#111120' }} />
-          <span style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.15em' }}>{now}</span>
+          <span style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.15em' }}>{now}</span>
           <div style={{ width: 1, height: 20, background: '#111120' }} />
           <button
             onClick={onSearch}
             title="Buscar (Ctrl+K)"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, color: '#6868a8', fontSize: 12, cursor: 'pointer', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
+            style={{ background: theme.surface, border: `1px solid `, borderRadius: 8, color: theme.textMuted, fontSize: 12, cursor: 'pointer', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
           >🔍 <span style={{ fontSize: 10, letterSpacing: '0.1em' }}>CTRL+K</span></button>
           {notifBell}
           <div style={{ width: 1, height: 20, background: '#111120' }} />
@@ -234,18 +234,18 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
               width: 26, height: 26, borderRadius: 8,
               background: 'linear-gradient(135deg, #e91e8c, #3b82f6)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 11, fontWeight: 900, color: '#fff',
+              fontSize: 11, fontWeight: 900, color: theme.text,
             }}>RB</div>
             <div>
-              <p style={{ margin: 0, color: '#c0c0d8', fontSize: 11, fontWeight: 700, lineHeight: 1 }}>Ramses Batalla</p>
-              <p style={{ margin: 0, color: '#5a5a90', fontSize: 9, letterSpacing: '0.15em', lineHeight: 1.4 }}>ADMIN</p>
+              <p style={{ margin: 0, color: theme.text, fontSize: 11, fontWeight: 700, lineHeight: 1 }}>Ramses Batalla</p>
+              <p style={{ margin: 0, color: theme.textMuted, fontSize: 9, letterSpacing: '0.15em', lineHeight: 1.4 }}>ADMIN</p>
             </div>
           </div>
           <button
             onClick={onLogout}
             style={{
               background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: 8, color: '#6868a8', fontSize: 11,
+              borderRadius: 8, color: theme.textMuted, fontSize: 11,
               cursor: 'pointer', letterSpacing: '0.15em',
               fontFamily: "'Inter', system-ui, sans-serif",
               padding: '8px 16px', transition: 'all 0.2s',
@@ -267,11 +267,11 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
       <main style={{ position: 'relative', zIndex: 1, padding: '40px 48px 64px', maxWidth: 1400, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 40 }}>
-          <p style={{ color: '#4a4a80', fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>━━ CENTRO DE CONTROL</p>
-          <h1 style={{ color: '#fff', fontSize: 36, fontWeight: 900, margin: '0 0 4px', letterSpacing: '1px' }}>
+          <p style={{ color: theme.textDim, fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>━━ CENTRO DE CONTROL</p>
+          <h1 style={{ color: theme.text, fontSize: 36, fontWeight: 900, margin: '0 0 4px', letterSpacing: '1px' }}>
             {greeting}, Ramses
           </h1>
-          <p style={{ color: '#6868aa', fontSize: 13, margin: 0 }}>
+          <p style={{ color: theme.textMuted, fontSize: 13, margin: 0 }}>
             Tienes <span style={{ color: '#e91e8c', fontWeight: 700 }}>6 módulos</span> activas y todos los sistemas operando con normalidad.
           </p>
         </div>
@@ -284,15 +284,15 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
               borderRadius: 14, padding: '20px 22px',
               borderLeft: `3px solid ${k.color}`,
             }}>
-              <p style={{ color: '#6060a0', fontSize: 9, letterSpacing: '0.3em', margin: '0 0 8px', textTransform: 'uppercase' }}>{k.label}</p>
-              <p style={{ color: '#fff', fontSize: 28, fontWeight: 900, margin: '0 0 4px', lineHeight: 1 }}>{k.value}</p>
-              <p style={{ color: '#5050a0', fontSize: 10, margin: 0 }}>{k.sub}</p>
+              <p style={{ color: theme.textDim, fontSize: 9, letterSpacing: '0.3em', margin: '0 0 8px', textTransform: 'uppercase' }}>{k.label}</p>
+              <p style={{ color: theme.text, fontSize: 28, fontWeight: 900, margin: '0 0 4px', lineHeight: 1 }}>{k.value}</p>
+              <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>{k.sub}</p>
             </div>
           ))}
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <p style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>━━ APLICACIONES CONECTADAS</p>
+          <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>━━ APLICACIONES CONECTADAS</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 14, marginBottom: 32 }}>
           {sortedApps.map(app => (
@@ -316,7 +316,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
                   position: 'absolute', top: 8, left: 12,
                   background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: 4, padding: '2px 7px',
-                  color: '#9090c0', fontSize: 8, letterSpacing: '0.3em', fontWeight: 700,
+                  color: theme.textMuted, fontSize: 8, letterSpacing: '0.3em', fontWeight: 700,
                 }}>FIJADA</div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
@@ -327,8 +327,8 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
                   }}>{app.icon}</div>
                   <div>
-                    <h3 style={{ color: '#e0e0f0', fontSize: 16, fontWeight: 900, margin: '0 0 4px', letterSpacing: '0.5px' }}>{app.name}</h3>
-                    <p style={{ color: '#7878a8', fontSize: 11, margin: 0, lineHeight: 1.4 }}>{app.desc}</p>
+                    <h3 style={{ color: theme.text, fontSize: 16, fontWeight: 900, margin: '0 0 4px', letterSpacing: '0.5px' }}>{app.name}</h3>
+                    <p style={{ color: theme.textMuted, fontSize: 11, margin: 0, lineHeight: 1.4 }}>{app.desc}</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
@@ -363,7 +363,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch }: Prop
                     background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.03)',
                     borderRadius: 10, padding: '11px 12px',
                   }}>
-                    <p style={{ color: '#5a5a90', fontSize: 9, letterSpacing: '0.25em', margin: '0 0 6px', textTransform: 'uppercase' }}>{s.label}</p>
+                    <p style={{ color: theme.textMuted, fontSize: 9, letterSpacing: '0.25em', margin: '0 0 6px', textTransform: 'uppercase' }}>{s.label}</p>
                     <p style={{ color: '#c0c0d8', fontSize: 18, fontWeight: 900, margin: 0 }}>{s.value}</p>
                   </div>
                 ))}
