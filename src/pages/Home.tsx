@@ -9,9 +9,9 @@ interface Props {
 const APPS = [
   {
     id: 'vor' as Screen,
-    name: 'VOR â€” Verdad o Reto',
-    desc: 'GestiÃ³n de retos, verdades y contenido del juego',
-    icon: 'ğŸ®',
+    name: 'VOR GÇö Verdad o Reto',
+    desc: 'Gesti+¦n de retos, verdades y contenido del juego',
+    icon: '=ƒÄ«',
     color: '#e91e8c',
     borderIdle: 'rgba(233,30,140,0.18)',
     borderHover: 'rgba(233,30,140,0.5)',
@@ -23,14 +23,14 @@ const APPS = [
     stats: [
       { label: 'Retos', value: '2,216' },
       { label: 'Modos', value: '13' },
-      { label: 'VersiÃ³n', value: '1.4.0' },
+      { label: 'Versi+¦n', value: '1.4.0' },
     ],
   },
   {
     id: 'barrio' as Screen,
     name: 'BarrioAlerta',
     desc: 'Monitoreo de incidentes y reportes de la comunidad',
-    icon: 'ğŸš¨',
+    icon: '=ƒÜ¿',
     color: '#3b82f6',
     borderIdle: 'rgba(59,130,246,0.18)',
     borderHover: 'rgba(59,130,246,0.5)',
@@ -40,16 +40,16 @@ const APPS = [
     status: 'LIVE',
     statusColor: '#22c55e',
     stats: [
-      { label: 'Incidentes', value: 'â€”' },
-      { label: 'Usuarios', value: 'â€”' },
-      { label: 'Reportes', value: 'â€”' },
+      { label: 'Incidentes', value: 'GÇö' },
+      { label: 'Usuarios', value: 'GÇö' },
+      { label: 'Reportes', value: 'GÇö' },
     ],
   },
   {
     id: 'yavoy' as Screen,
     name: 'Ya Voy!',
-    desc: 'Plataforma de reparto â€” cliente, restaurante y repartidor',
-    icon: 'ğŸ›µ',
+    desc: 'Plataforma de reparto GÇö cliente, restaurante y repartidor',
+    icon: '=ƒ¢¦',
     color: '#f97316',
     borderIdle: 'rgba(249,115,22,0.18)',
     borderHover: 'rgba(249,115,22,0.5)',
@@ -60,7 +60,7 @@ const APPS = [
     statusColor: '#f59e0b',
     stats: [
       { label: 'Apps', value: '3' },
-      { label: 'Pedidos', value: 'â€”' },
+      { label: 'Pedidos', value: 'GÇö' },
       { label: 'Estado', value: 'DEV' },
     ],
   },
@@ -68,15 +68,15 @@ const APPS = [
 
 const KPI = [
   { label: 'Apps activas', value: '3', sub: '+1 este mes', color: '#e91e8c' },
-  { label: 'Uptime global', value: '99.8%', sub: 'Ãšltimos 30 dÃ­as', color: '#22c55e' },
-  { label: 'VersiÃ³n latest', value: '1.4.0', sub: 'VOR Dashboard', color: '#3b82f6' },
-  { label: 'Entorno', value: 'PROD', sub: 'Vercel Â· main', color: '#f97316' },
+  { label: 'Uptime global', value: '99.8%', sub: '+Ültimos 30 d+¡as', color: '#22c55e' },
+  { label: 'Versi+¦n latest', value: '1.4.0', sub: 'VOR Dashboard', color: '#3b82f6' },
+  { label: 'Entorno', value: 'PROD', sub: 'Vercel -+ main', color: '#f97316' },
 ];
 
 const ACTIVITY = [
-  { time: 'Hace 2 min', msg: 'Deploy exitoso â€” batallagroup-dashboard', type: 'success' },
-  { time: 'Hace 18 min', msg: 'Push a main â€” fix: Home.tsx reescrito limpio', type: 'info' },
-  { time: 'Hace 1 h', msg: 'Ya Voy! agregado al panel â€” 3 sub-apps', type: 'info' },
+  { time: 'Hace 2 min', msg: 'Deploy exitoso GÇö batallagroup-dashboard', type: 'success' },
+  { time: 'Hace 18 min', msg: 'Push a main GÇö fix: Home.tsx reescrito limpio', type: 'info' },
+  { time: 'Hace 1 h', msg: 'Ya Voy! agregado al panel GÇö 3 sub-apps', type: 'info' },
   { time: 'Hace 3 h', msg: 'VORDashboard v1.4.0 actualizado', type: 'success' },
   { time: 'Ayer', msg: 'BarrioAlerta conectado a Supabase', type: 'success' },
 ];
@@ -89,10 +89,10 @@ const SYSTEM = [
 ];
 
 const QUICKLINKS = [
-  { label: 'Vercel Dashboard', url: 'https://vercel.com/dashboard', icon: 'â–²' },
-  { label: 'Supabase Studio', url: 'https://supabase.com/dashboard', icon: 'âš¡' },
-  { label: 'Repositorio GitHub', url: 'https://github.com', icon: 'â¬¡' },
-  { label: 'DocumentaciÃ³n', url: '#', icon: 'ğŸ“„' },
+  { label: 'Vercel Dashboard', url: 'https://vercel.com/dashboard', icon: 'Gû¦' },
+  { label: 'Supabase Studio', url: 'https://supabase.com/dashboard', icon: 'GÜí' },
+  { label: 'Repositorio GitHub', url: 'https://github.com', icon: 'G¼í' },
+  { label: 'Documentaci+¦n', url: '#', icon: '=ƒôä' },
 ];
 
 export default function Home({ onNavigate, onLogout }: Props) {
@@ -100,9 +100,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [pinnedApps, setPinnedApps] = useState<string[]>([]);    e.stopPropagation();
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
     } else {
-      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
   };
 
@@ -123,7 +121,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
   }).toUpperCase();
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Buenos dÃ­as' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const greeting = hour < 12 ? 'Buenos d+¡as' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
 
   return (
     <div style={{
@@ -153,7 +151,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
             <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 17, fontWeight: 900, letterSpacing: '3px' }}>GROUP</span>
           </div>
           <div style={{ width: 1, height: 20, background: '#111120' }} />
-          <span style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÃ“N</span>
+          <span style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACI+ôN</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -199,7 +197,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
               (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)';
             }}
           >
-            SALIR â†—
+            SALIR Gåù
           </button>
         </div>
       </header>
@@ -207,7 +205,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
       <main style={{ position: 'relative', zIndex: 1, padding: '40px 48px 64px', maxWidth: 1400, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 40 }}>
-          <p style={{ color: '#4a4a80', fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>â”â” CENTRO DE CONTROL</p>
+          <p style={{ color: '#4a4a80', fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>GöüGöü CENTRO DE CONTROL</p>
           <h1 style={{ color: '#fff', fontSize: 36, fontWeight: 900, margin: '0 0 4px', letterSpacing: '1px' }}>
             {greeting}, Ramses
           </h1>
@@ -232,7 +230,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <p style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>â”â” APLICACIONES CONECTADAS</p>
+          <p style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>GöüGöü APLICACIONES CONECTADAS</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 14, marginBottom: 32 }}>
           {sortedApps.map(app => (
@@ -286,9 +284,9 @@ export default function Home({ onNavigate, onLogout }: Props) {
                         color: pinnedApps.includes(app.id) ? app.color : '#4a4a78',
                       }}
                     >
-                      {pinnedApps.includes(app.id) ? 'ğŸ“Œ' : 'ğŸ“'}
+                      {pinnedApps.includes(app.id) ? '=ƒôî' : '=ƒôì'}
                     </button>
-                    <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>â†’</span>
+                    <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>GåÆ</span>
                   </div>
                   <span style={{
                     background: `${app.statusColor}18`, border: `1px solid ${app.statusColor}40`,
@@ -316,8 +314,8 @@ export default function Home({ onNavigate, onLogout }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 26px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: 0 }}>â”â” ACTIVIDAD RECIENTE</p>
-                <span style={{ color: '#5050a0', fontSize: 10 }}>Ver todo â†’</span>
+                <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: 0 }}>GöüGöü ACTIVIDAD RECIENTE</p>
+                <span style={{ color: '#5050a0', fontSize: 10 }}>Ver todo GåÆ</span>
               </div>
               {ACTIVITY.map((a, i) => (
                 <div key={i} style={{
@@ -339,7 +337,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 26px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 20px' }}>â”â” ESTADO DEL SISTEMA</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 20px' }}>GöüGöü ESTADO DEL SISTEMA</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {SYSTEM.map(s => (
                   <div key={s.label} style={{
@@ -360,7 +358,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 22px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 18px' }}>â”â” ACCESO RÃPIDO</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 18px' }}>GöüGöü ACCESO R+üPIDO</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {QUICKLINKS.map(l => (
                   <a key={l.label} href={l.url} target="_blank" rel="noreferrer"
@@ -375,16 +373,16 @@ export default function Home({ onNavigate, onLogout }: Props) {
                     }}>
                     <span style={{ fontSize: 14 }}>{l.icon}</span>
                     <span style={{ color: hoveredLink === l.label ? '#d0d0f0' : '#8080b8', fontSize: 12, flex: 1 }}>{l.label}</span>
-                    <span style={{ color: '#5050a0', fontSize: 10 }}>â†—</span>
+                    <span style={{ color: '#5050a0', fontSize: 10 }}>Gåù</span>
                   </a>
                 ))}
               </div>
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '22px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>â”â” BUILD INFO</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>GöüGöü BUILD INFO</p>
               {[
-                { label: 'VersiÃ³n', value: 'v1.4.0' },
+                { label: 'Versi+¦n', value: 'v1.4.0' },
                 { label: 'Branch', value: 'main' },
                 { label: 'Framework', value: 'React + Vite' },
                 { label: 'Deploy', value: 'Vercel' },
@@ -398,9 +396,9 @@ export default function Home({ onNavigate, onLogout }: Props) {
             </div>
 
             <div style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: 16, padding: '18px 20px' }}>
-              <p style={{ color: '#f97316', fontSize: 10, letterSpacing: '0.25em', margin: '0 0 8px' }}>â”â” NOTA</p>
+              <p style={{ color: '#f97316', fontSize: 10, letterSpacing: '0.25em', margin: '0 0 8px' }}>GöüGöü NOTA</p>
               <p style={{ color: '#c88848', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
-                Ya Voy! estÃ¡ en desarrollo activo. Conecta las 3 sub-apps para activar mÃ©tricas reales.
+                Ya Voy! est+í en desarrollo activo. Conecta las 3 sub-apps para activar m+¬tricas reales.
               </p>
             </div>
           </div>
@@ -411,8 +409,8 @@ export default function Home({ onNavigate, onLogout }: Props) {
         position: 'relative', zIndex: 1, borderTop: '1px solid #0a0a14',
         padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>Â© 2026 BATALLAGROUP â€” TODOS LOS DERECHOS RESERVADOS</span>
-        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>V 1.4.0 Â· PROD</span>
+        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>-¬ 2026 BATALLAGROUP GÇö TODOS LOS DERECHOS RESERVADOS</span>
+        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>V 1.4.0 -+ PROD</span>
       </footer>
     </div>
   );
