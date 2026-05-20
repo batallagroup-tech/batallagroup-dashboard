@@ -1,9 +1,13 @@
 import { useState } from 'react';
+import type { Theme } from '../App';
 import type { Screen } from '../types';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
   onLogout: () => void;
+  theme: Theme;
+  notifBell?: React.ReactNode;
+  onSearch?: () => void;
 }
 
 const APPS = [
@@ -43,6 +47,63 @@ const APPS = [
       { label: 'Incidentes', value: '—' },
       { label: 'Usuarios', value: '—' },
       { label: 'Reportes', value: '—' },
+    ],
+  },
+  {
+    id: 'yavoy-admin' as Screen,
+    name: 'Ya Voy! Admin',
+    desc: 'Restaurantes, menús y repartidores',
+    icon: '🏪',
+    color: '#f97316',
+    borderIdle: 'rgba(249,115,22,0.18)',
+    borderHover: 'rgba(249,115,22,0.5)',
+    bgHover: 'rgba(249,115,22,0.06)',
+    topLine: '#f97316',
+    accent: '#1a0e00',
+    status: 'DEV',
+    statusColor: '#f59e0b',
+    stats: [
+      { label: 'Restaurantes', value: '3' },
+      { label: 'Repartidores', value: '3' },
+      { label: 'Platillos', value: '5' },
+    ],
+  },
+  {
+    id: 'analytics' as Screen,
+    name: 'Analytics',
+    desc: 'Gráficas de crecimiento y métricas',
+    icon: '📊',
+    color: '#22c55e',
+    borderIdle: 'rgba(34,197,94,0.18)',
+    borderHover: 'rgba(34,197,94,0.5)',
+    bgHover: 'rgba(34,197,94,0.06)',
+    topLine: '#22c55e',
+    accent: '#001a0a',
+    status: 'LIVE',
+    statusColor: '#22c55e',
+    stats: [
+      { label: 'Apps', value: '3' },
+      { label: 'Usuarios', value: '89+' },
+      { label: 'Semanas', value: '8' },
+    ],
+  },
+  {
+    id: 'versions' as Screen,
+    name: 'Versiones',
+    desc: 'Changelog y gestión de versiones',
+    icon: '📋',
+    color: '#8b5cf6',
+    borderIdle: 'rgba(139,92,246,0.18)',
+    borderHover: 'rgba(139,92,246,0.5)',
+    bgHover: 'rgba(139,92,246,0.06)',
+    topLine: '#8b5cf6',
+    accent: '#0e001a',
+    status: 'LIVE',
+    statusColor: '#22c55e',
+    stats: [
+      { label: 'Versiones', value: '3' },
+      { label: 'Apps', value: '3' },
+      { label: 'Último', value: 'v1.4.0' },
     ],
   },
   {
@@ -95,7 +156,7 @@ const QUICKLINKS = [
   { label: 'Documentación', url: '#', icon: '📄' },
 ];
 
-export default function Home({ onNavigate, onLogout }: Props) {
+export default function Home({ onNavigate, onLogout, theme, notifBell, onSearch }: Props) {
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [pinnedApps, setPinnedApps] = useState<string[]>([]);
@@ -158,6 +219,13 @@ export default function Home({ onNavigate, onLogout }: Props) {
           <div style={{ width: 1, height: 20, background: '#111120' }} />
           <span style={{ color: '#4a4a80', fontSize: 10, letterSpacing: '0.15em' }}>{now}</span>
           <div style={{ width: 1, height: 20, background: '#111120' }} />
+          <button
+            onClick={onSearch}
+            title="Buscar (Ctrl+K)"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, color: '#6868a8', fontSize: 12, cursor: 'pointer', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
+          >🔍 <span style={{ fontSize: 10, letterSpacing: '0.1em' }}>CTRL+K</span></button>
+          {notifBell}
+          <div style={{ width: 1, height: 20, background: '#111120' }} />
           <div style={{
             display: 'flex', alignItems: 'center', gap: 10,
             background: 'rgba(255,255,255,0.04)',
@@ -206,7 +274,7 @@ export default function Home({ onNavigate, onLogout }: Props) {
             {greeting}, Ramses
           </h1>
           <p style={{ color: '#6868aa', fontSize: 13, margin: 0 }}>
-            Tienes <span style={{ color: '#e91e8c', fontWeight: 700 }}>3 aplicaciones</span> activas y todos los sistemas operando con normalidad.
+            Tienes <span style={{ color: '#e91e8c', fontWeight: 700 }}>6 módulos</span> activas y todos los sistemas operando con normalidad.
           </p>
         </div>
 

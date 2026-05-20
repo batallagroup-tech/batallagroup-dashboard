@@ -1,1 +1,9 @@
-export type Screen = 'login' | 'home' | 'vor' | 'barrio' | 'yavoy';
+export type Screen =
+  | 'login'
+  | 'home'
+  | 'vor'
+  | 'barrio'
+  | 'yavoy'
+  | 'analytics'
+  | 'versions'
+  | 'yavoy-admin';
