@@ -113,7 +113,7 @@ export default function Login({ onLogin, theme }: Props) {
         background: theme.bg2,
       }}>
         <div style={{ marginBottom: 40 }}>
-          <h2 style={{ color: '#ffffff', fontSize: 22, fontWeight: 900, margin: '0 0 8px', letterSpacing: '1px' }}>
+          <h2 style={{ color: theme.text, fontSize: 22, fontWeight: 900, margin: '0 0 8px', letterSpacing: '1px' }}>
             Acceder
           </h2>
           <p style={{ color: theme.textMuted, fontSize: 12, margin: 0, letterSpacing: '0.1em' }}>
@@ -168,7 +168,7 @@ export default function Login({ onLogin, theme }: Props) {
             style={{
               position: 'absolute', right: 14, top: 38,
               background: 'none', border: 'none',
-              color: '#5858a0', cursor: 'pointer', fontSize: 15,
+              color: theme.textMuted, cursor: 'pointer', fontSize: 15,
             }}
           >
             {showPass ? '🙈' : '👁️'}
