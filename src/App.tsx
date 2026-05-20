@@ -274,8 +274,7 @@ export default function App() {
 
   // Apply bg to body
   useEffect(() => {
-    document.body.style.background = theme.bg;
-    document.body.style.color = theme.text;
+    document.body.style.background = theme.bg; document.body.style.color = theme.text; document.body.style.transition = "background 0.3s, color 0.3s";
   }, [theme]);
 
   // Ctrl+K shortcut
