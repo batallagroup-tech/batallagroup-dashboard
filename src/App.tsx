@@ -268,7 +268,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(() =>
     sessionStorage.getItem('bg_auth') === '1' ? 'home' : 'login'
   );
-  const [dark, setDark] = useState(true);
+  const [dark, setDark] = useState(() => localStorage.getItem('bg_theme') !== 'light');
   const [searchOpen, setSearchOpen] = useState(false);
   const theme = dark ? DARK : LIGHT;
 
@@ -297,7 +297,7 @@ export default function App() {
     <>
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onNavigate={handleNavigate} theme={theme} />}
       <FullscreenButton theme={theme} />
-      <ThemeButton dark={dark} onToggle={() => setDark(v => !v)} theme={theme} />
+      <ThemeButton dark={dark} onToggle={() => setDark(v => { const next = !v; localStorage.setItem('bg_theme', next ? 'dark' : 'light'); return next; })} theme={theme} />
 
       {screen === 'login'       && <Login onLogin={handleLogin} />}
       {screen === 'home'        && <Home onNavigate={handleNavigate} onLogout={handleLogout} {...sharedProps} />}
