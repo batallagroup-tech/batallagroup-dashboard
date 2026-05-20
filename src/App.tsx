@@ -268,13 +268,14 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(() =>
     sessionStorage.getItem('bg_auth') === '1' ? 'home' : 'login'
   );
-  const [dark, setDark] = useState(() => localStorage.getItem('bg_theme') !== 'light');
+  const [dark, setDark] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const theme = dark ? DARK : LIGHT;
 
   // Apply bg to body
   useEffect(() => {
-    document.body.style.background = theme.bg; document.body.style.color = theme.text; document.body.style.transition = "background 0.3s, color 0.3s";
+    document.body.style.background = theme.bg;
+    document.body.style.color = theme.text;
   }, [theme]);
 
   // Ctrl+K shortcut
@@ -296,9 +297,9 @@ export default function App() {
     <>
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onNavigate={handleNavigate} theme={theme} />}
       <FullscreenButton theme={theme} />
-      <ThemeButton dark={dark} onToggle={() => setDark(v => { const next = !v; localStorage.setItem('bg_theme', next ? 'dark' : 'light'); return next; })} theme={theme} />
+      <ThemeButton dark={dark} onToggle={() => setDark(v => !v)} theme={theme} />
 
-      {screen === 'login'       && <Login onLogin={handleLogin} />}
+      {screen === 'login'       && <Login onLogin={handleLogin} theme={theme} />}
       {screen === 'home'        && <Home onNavigate={handleNavigate} onLogout={handleLogout} {...sharedProps} />}
       {screen === 'vor'         && <VORDashboard onBack={() => setScreen('home')} />}
       {screen === 'barrio'      && <BarrioAlerta onBack={() => setScreen('home')} />}
@@ -309,4 +310,3 @@ export default function App() {
     </>
   );
 }
-

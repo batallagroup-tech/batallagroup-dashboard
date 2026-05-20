@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import type { Theme } from '../App';
 
-interface Props { onLogin: () => void; }
+interface Props { onLogin: () => void; theme: Theme; }
 
-export default function Login({ onLogin }: Props) {
+export default function Login({ onLogin, theme }: Props) {
+  useEffect(() => {
+    document.body.style.background = theme.bg;
+    document.body.style.color = theme.text;
+  }, [theme]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -26,7 +32,7 @@ export default function Login({ onLogin }: Props) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#050508',
+      background: theme.bg,
       display: 'flex',
       fontFamily: "'Inter', system-ui, sans-serif",
       overflow: 'hidden',
@@ -89,7 +95,7 @@ export default function Login({ onLogin }: Props) {
           </div>
 
           <div style={{ borderLeft: '2px solid rgba(255,255,255,0.12)', paddingLeft: 20 }}>
-            <p style={{ color: '#7878a8', fontSize: 12, margin: 0, lineHeight: 1.8, letterSpacing: '0.05em' }}>
+            <p style={{ color: theme.textMuted, fontSize: 12, margin: 0, lineHeight: 1.8, letterSpacing: '0.05em' }}>
               Panel de administración<br />
               acceso restringido
             </p>
@@ -104,19 +110,19 @@ export default function Login({ onLogin }: Props) {
         flexDirection: 'column',
         justifyContent: 'center',
         padding: '60px 56px',
-        background: '#07070c',
+        background: theme.bg2,
       }}>
         <div style={{ marginBottom: 40 }}>
           <h2 style={{ color: '#ffffff', fontSize: 22, fontWeight: 900, margin: '0 0 8px', letterSpacing: '1px' }}>
             Acceder
           </h2>
-          <p style={{ color: '#6868a0', fontSize: 12, margin: 0, letterSpacing: '0.1em' }}>
+          <p style={{ color: theme.textMuted, fontSize: 12, margin: 0, letterSpacing: '0.1em' }}>
             Introduce tus credenciales
           </p>
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <label style={{ color: '#6868a8', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
+          <label style={{ color: theme.textMuted, fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
             CORREO ELECTRÓNICO
           </label>
           <input
@@ -126,19 +132,19 @@ export default function Login({ onLogin }: Props) {
             placeholder="usuario@batallagroup.com"
             style={{
               width: '100%', padding: '14px 18px',
-              background: '#0c0c14',
-              border: '1px solid #1a1a28',
-              borderRadius: 10, color: '#d0d0e0',
+              background: theme.surface,
+              border: `1px solid ${theme.border}`,
+              borderRadius: 10, color: theme.text,
               fontSize: 14, boxSizing: 'border-box', outline: 'none',
               transition: 'border-color 0.2s',
             }}
-            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#3a3a58'}
-            onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#1a1a28'}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = theme.textMuted}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = theme.border}
           />
         </div>
 
         <div style={{ marginBottom: 32, position: 'relative' }}>
-          <label style={{ color: '#6868a8', fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
+          <label style={{ color: theme.textMuted, fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
             CONTRASEÑA
           </label>
           <input
@@ -148,14 +154,14 @@ export default function Login({ onLogin }: Props) {
             placeholder="••••••••••••"
             style={{
               width: '100%', padding: '14px 48px 14px 18px',
-              background: '#0c0c14',
-              border: '1px solid #1a1a28',
-              borderRadius: 10, color: '#d0d0e0',
+              background: theme.surface,
+              border: `1px solid ${theme.border}`,
+              borderRadius: 10, color: theme.text,
               fontSize: 14, boxSizing: 'border-box', outline: 'none',
               transition: 'border-color 0.2s',
             }}
-            onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#3a3a58'}
-            onBlur={e => (e.target as HTMLInputElement).style.borderColor = '#1a1a28'}
+            onFocus={e => (e.target as HTMLInputElement).style.borderColor = theme.textMuted}
+            onBlur={e => (e.target as HTMLInputElement).style.borderColor = theme.border}
           />
           <button
             onClick={() => setShowPass(!showPass)}
@@ -186,10 +192,10 @@ export default function Login({ onLogin }: Props) {
           disabled={loading}
           style={{
             width: '100%', padding: '15px',
-            background: loading ? '#0f0f1a' : '#ffffff',
-            border: '1px solid ' + (loading ? '#1a1a28' : '#ffffff'),
+            background: loading ? theme.surface : theme.text,
+            border: `1px solid ${loading ? theme.border : theme.text}`,
             borderRadius: 10,
-            color: loading ? '#303045' : '#050508',
+            color: loading ? theme.textDim : theme.bg,
             fontWeight: 900, fontSize: 13,
             cursor: loading ? 'not-allowed' : 'pointer',
             letterSpacing: '0.25em',
@@ -198,21 +204,21 @@ export default function Login({ onLogin }: Props) {
           }}
           onMouseEnter={e => {
             if (!loading) {
-              (e.currentTarget as HTMLButtonElement).style.background = '#e0e0f0';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#e0e0f0';
+              (e.currentTarget as HTMLButtonElement).style.background = theme.textMuted;
+              (e.currentTarget as HTMLButtonElement).style.borderColor = theme.textMuted;
             }
           }}
           onMouseLeave={e => {
             if (!loading) {
-              (e.currentTarget as HTMLButtonElement).style.background = '#ffffff';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#ffffff';
+              (e.currentTarget as HTMLButtonElement).style.background = theme.text;
+              (e.currentTarget as HTMLButtonElement).style.borderColor = theme.text;
             }
           }}
         >
           {loading ? 'VERIFICANDO...' : 'ENTRAR →'}
         </button>
 
-        <p style={{ color: '#4a4a80', fontSize: 11, marginTop: 32, textAlign: 'center', letterSpacing: '0.1em' }}>
+        <p style={{ color: theme.textDim, fontSize: 11, marginTop: 32, textAlign: 'center', letterSpacing: '0.1em' }}>
           © 2026 BatallaGroup. Acceso restringido.
         </p>
       </div>
