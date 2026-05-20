@@ -72,7 +72,7 @@ export default function Login({ onLogin, theme }: Props) {
               SISTEMA PRIVADO
             </div>
             <h1 style={{
-              color: '#ffffff',
+              color: theme.text,
               fontSize: 52,
               fontWeight: 900,
               margin: 0,
@@ -82,7 +82,7 @@ export default function Login({ onLogin, theme }: Props) {
               BATALLA
             </h1>
             <h1 style={{
-              color: '#ffffff',
+              color: theme.text,
               fontSize: 52,
               fontWeight: 900,
               margin: 0,
