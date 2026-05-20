@@ -299,7 +299,7 @@ export default function App() {
       <FullscreenButton theme={theme} />
       <ThemeButton dark={dark} onToggle={() => setDark(v => !v)} theme={theme} />
 
-      {screen === 'login'       && <Login onLogin={handleLogin} theme={theme} />}
+      {screen === 'login'       && <Login onLogin={handleLogin} />}
       {screen === 'home'        && <Home onNavigate={handleNavigate} onLogout={handleLogout} {...sharedProps} />}
       {screen === 'vor'         && <VORDashboard onBack={() => setScreen('home')} />}
       {screen === 'barrio'      && <BarrioAlerta onBack={() => setScreen('home')} />}
@@ -310,3 +310,4 @@ export default function App() {
     </>
   );
 }
+
