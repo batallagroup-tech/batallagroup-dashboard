@@ -46,7 +46,7 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     setLoading(true); setError('');
     try {
       const db = neon(import.meta.env.VITE_DATABASE_URL!);
-      const data = await sql('SELECT s.*, u.email as usuario_email FROM solicitudes s LEFT JOIN usuarios u ON u.id = s.usuario_id WHERE s.tipo = $1 ORDER BY s.creado_en DESC', ['negocio']);
+      const data = await db.query('SELECT s.*, u.email as usuario_email FROM solicitudes s LEFT JOIN usuarios u ON u.id = s.usuario_id WHERE s.tipo = $1 ORDER BY s.creado_en DESC', ['negocio']);
       setSolicitudes(data as Solicitud[]);
     } catch (err: any) {
       setError('Error al cargar: ' + err.message);
@@ -251,4 +251,5 @@ export default function YaVoy({ onBack, theme }: Props) {
     </div>
   );
 }
+
 
