@@ -72,9 +72,9 @@ const APPS = [
 
 const KPI = [
   { label: 'Apps activas', value: '3', sub: '+1 este mes', color: '#e91e8c' },
-  { label: 'Uptime global', value: '99.8%', sub: 'Ãšltimos 30 dÃ­as', color: '#22c55e' },
-  { label: 'VersiÃ³n latest', value: '1.4.0', sub: 'VOR Dashboard', color: '#3b82f6' },
-  { label: 'Entorno', value: 'PROD', sub: 'Vercel Â· main', color: '#f97316' },
+  { label: 'Uptime global', value: '99.8%', sub: 'Últimos 30 días', color: '#22c55e' },
+  { label: 'Versión latest', value: '1.4.0', sub: 'VOR Dashboard', color: '#3b82f6' },
+  { label: 'Entorno', value: 'PROD', sub: 'Vercel · main', color: '#f97316' },
 ];
 
 const ACTIVITY = [
@@ -96,7 +96,7 @@ const QUICKLINKS = [
   { label: 'Vercel Dashboard', url: 'https://vercel.com/dashboard', icon: 'â–²' },
   { label: 'Supabase Studio', url: 'https://supabase.com/dashboard', icon: 'âš¡' },
   { label: 'Repositorio GitHub', url: 'https://github.com', icon: 'â¬¡' },
-  { label: 'DocumentaciÃ³n', url: '#', icon: 'ðŸ“„' },
+  { label: 'Documentación', url: '#', icon: 'ðŸ“„' },
 ];
 
 export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme }: Props) {
@@ -121,7 +121,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
   }).toUpperCase();
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Buenos dÃ­as' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const greeting = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
 
   return (
     <div style={{
@@ -217,7 +217,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             {greeting}, Ramses
           </h1>
           <p style={{ color: theme.textMuted, fontSize: 13, margin: 0 }}>
-            Tienes <span style={{ color: '#e91e8c', fontWeight: 700 }}>6 mÃ³dulos</span> activas y todos los sistemas operando con normalidad.
+            Tienes <span style={{ color: '#e91e8c', fontWeight: 700 }}>6 módulos</span> activas y todos los sistemas operando con normalidad.
           </p>
         </div>
 
@@ -389,7 +389,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '22px' }}>
               <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>â”â” BUILD INFO</p>
               {[
-                { label: 'VersiÃ³n', value: 'v1.4.0' },
+                { label: 'Versión', value: 'v1.4.0' },
                 { label: 'Branch', value: 'main' },
                 { label: 'Framework', value: 'React + Vite' },
                 { label: 'Deploy', value: 'Vercel' },
@@ -405,7 +405,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             <div style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: 16, padding: '18px 20px' }}>
               <p style={{ color: '#f97316', fontSize: 10, letterSpacing: '0.25em', margin: '0 0 8px' }}>â”â” NOTA</p>
               <p style={{ color: '#c88848', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
-                Ya Voy! estÃ¡ en desarrollo activo. Conecta las 3 sub-apps para activar mÃ©tricas reales.
+                Ya Voy! está en desarrollo activo. Conecta las 3 sub-apps para activar métricas reales.
               </p>
             </div>
           </div>
@@ -417,7 +417,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
         padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>Â© 2026 BATALLAGROUP â€” TODOS LOS DERECHOS RESERVADOS</span>
-        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>V 1.4.0 Â· PROD</span>
+        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>V 1.4.0 · PROD</span>
       </footer>
     </div>
   );
