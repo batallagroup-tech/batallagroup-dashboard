@@ -2,8 +2,6 @@
 import type { Theme } from '../App';
 import { neon } from '@neondatabase/serverless';
 
-
-
 interface Props { onBack: () => void; theme: Theme; }
 type SubApp = 'restaurante' | 'repartidor' | 'cliente' | null;
 
@@ -32,12 +30,8 @@ const SUBAPPS = [
   { id: 'cliente',     name: 'Ya Voy Cliente',      icon: '📱', desc: 'App para pedir comida a domicilio' },
 ];
 
-const STATUS_COLOR: Record<string, string> = {
-  pendiente: '#f59e0b', aprobado: '#22c55e', rechazado: '#ef4444',
-};
-const STATUS_LABEL: Record<string, string> = {
-  pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado',
-};
+const STATUS_COLOR: Record<string, string> = { pendiente: '#f59e0b', aprobado: '#22c55e', rechazado: '#ef4444' };
+const STATUS_LABEL: Record<string, string> = { pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado' };
 
 function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const [tab, setTab] = useState<'pendientes' | 'aprobados' | 'rechazados'>('pendientes');
@@ -49,15 +43,10 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
   const [procesando, setProcesando] = useState<string | null>(null);
 
   const cargar = async () => {
-  setLoading(true); setError('');
-  try {
-    const sql = neon(import.meta.env.VITE_DATABASE_URL!);
-        SELECT s.*, u.email as usuario_email
-        FROM solicitudes s
-        LEFT JOIN usuarios u ON u.id = s.usuario_id
-        WHERE s.tipo = 'negocio'
-        ORDER BY s.creado_en DESC
-      `;
+    setLoading(true); setError('');
+    try {
+      const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+      const data = await sql('SELECT s.*, u.email as usuario_email FROM solicitudes s LEFT JOIN usuarios u ON u.id = s.usuario_id WHERE s.tipo = $1 ORDER BY s.creado_en DESC', ['negocio']);
       setSolicitudes(data as Solicitud[]);
     } catch (err: any) {
       setError('Error al cargar: ' + err.message);
@@ -71,19 +60,9 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
   const aprobar = async (s: Solicitud) => {
     setProcesando(s.id);
     try {
-      await sql`
-        INSERT INTO viveres (owner_id, nombre_negocio, tipo_negocio, telefono, direccion, foto_url, status)
-        VALUES (
-          ${s.usuario_id},
-          ${s.datos?.nombre_negocio ?? ''},
-          ${s.datos?.tipo_negocio ?? ''},
-          ${s.datos?.telefono ?? ''},
-          ${s.datos?.direccion ?? ''},
-          ${s.datos?.foto_url ?? ''},
-          'aprobado'
-        )
-      `;
-      await sql`UPDATE solicitudes SET status = 'aprobado' WHERE id = ${s.id}`;
+      const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+      await sql('INSERT INTO viveres (owner_id, nombre_negocio, tipo_negocio, telefono, direccion, foto_url, status) VALUES ($1,$2,$3,$4,$5,$6,$7)', [s.usuario_id, s.datos?.nombre_negocio ?? '', s.datos?.tipo_negocio ?? '', s.datos?.telefono ?? '', s.datos?.direccion ?? '', s.datos?.foto_url ?? '', 'aprobado']);
+      await sql('UPDATE solicitudes SET status = $1 WHERE id = $2', ['aprobado', s.id]);
       await cargar();
     } catch (err: any) {
       setError('Error al aprobar: ' + err.message);
@@ -96,7 +75,8 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     if (!razon.trim()) return;
     setProcesando(id);
     try {
-      await sql`UPDATE solicitudes SET status = 'rechazado', razon_rechazo = ${razon} WHERE id = ${id}`;
+      const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+      await sql('UPDATE solicitudes SET status = $1, razon_rechazo = $2 WHERE id = $3', ['rechazado', razon, id]);
       setRechazando(null); setRazon('');
       await cargar();
     } catch (err: any) {
@@ -127,7 +107,6 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
       </div>
 
       <div style={{ padding: '24px 28px', maxWidth: 900, margin: '0 auto' }}>
-        {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 24 }}>
           {(['pendientes','aprobados','rechazados'] as const).map(t => {
             const count = solicitudes.filter(s =>
@@ -178,7 +157,6 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
                   </p>
                 )}
               </div>
-
               {s.status === 'pendiente' && (
                 <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, flexShrink: 0 }}>
                   <button onClick={() => aprobar(s)} disabled={procesando === s.id} style={{ ...btn('#22c55e'), opacity: procesando === s.id ? 0.5 : 1 }}>
@@ -190,7 +168,6 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
                 </div>
               )}
             </div>
-
             {rechazando === s.id && (
               <div style={{ marginTop: 14, padding: 14, background: '#ef444410', border: '1px solid #ef444430', borderRadius: 10 }}>
                 <p style={{ color: '#ef4444', fontSize: 12, fontWeight: 700, margin: '0 0 8px' }}>Motivo del rechazo:</p>
