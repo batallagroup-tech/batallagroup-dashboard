@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import type { Theme } from '../App';
 import type { Screen } from '../types';
 
@@ -13,9 +13,9 @@ interface Props {
 const APPS = [
   {
     id: 'vor' as Screen,
-    name: 'VOR — Verdad o Reto',
-    desc: 'Gestión de retos, verdades y contenido del juego',
-    icon: '🎮',
+    name: 'VOR â€” Verdad o Reto',
+    desc: 'GestiÃ³n de retos, verdades y contenido del juego',
+    icon: 'ðŸŽ®',
     color: '#e91e8c',
     borderIdle: 'rgba(233,30,140,0.18)',
     borderHover: 'rgba(233,30,140,0.5)',
@@ -27,14 +27,14 @@ const APPS = [
     stats: [
       { label: 'Retos', value: '2,216' },
       { label: 'Modos', value: '13' },
-      { label: 'Versión', value: '1.4.0' },
+      { label: 'VersiÃ³n', value: '1.4.0' },
     ],
   },
   {
     id: 'barrio' as Screen,
     name: 'BarrioAlerta',
     desc: 'Monitoreo de incidentes y reportes de la comunidad',
-    icon: '🚨',
+    icon: 'ðŸš¨',
     color: '#3b82f6',
     borderIdle: 'rgba(59,130,246,0.18)',
     borderHover: 'rgba(59,130,246,0.5)',
@@ -44,73 +44,28 @@ const APPS = [
     status: 'LIVE',
     statusColor: '#22c55e',
     stats: [
-      { label: 'Incidentes', value: '—' },
-      { label: 'Usuarios', value: '—' },
-      { label: 'Reportes', value: '—' },
+      { label: 'Incidentes', value: 'â€”' },
+      { label: 'Usuarios', value: 'â€”' },
+      { label: 'Reportes', value: 'â€”' },
     ],
-  },
-  {
-    id: 'yavoy-admin' as Screen,
-    name: 'Ya Voy! Admin',
-    desc: 'Restaurantes, menús y repartidores',
-    icon: '🏪',
-    color: '#f97316',
-    borderIdle: 'rgba(249,115,22,0.18)',
-    borderHover: 'rgba(249,115,22,0.5)',
-    bgHover: 'rgba(249,115,22,0.06)',
-    topLine: '#f97316',
-    accent: '#1a0e00',
-    status: 'DEV',
-    statusColor: '#f59e0b',
-    stats: [
-      { label: 'Restaurantes', value: '3' },
+  }
       { label: 'Repartidores', value: '3' },
       { label: 'Platillos', value: '5' },
     ],
-  },
-  {
-    id: 'analytics' as Screen,
-    name: 'Analytics',
-    desc: 'Gráficas de crecimiento y métricas',
-    icon: '📊',
-    color: '#22c55e',
-    borderIdle: 'rgba(34,197,94,0.18)',
-    borderHover: 'rgba(34,197,94,0.5)',
-    bgHover: 'rgba(34,197,94,0.06)',
-    topLine: '#22c55e',
-    accent: '#001a0a',
-    status: 'LIVE',
-    statusColor: '#22c55e',
-    stats: [
-      { label: 'Apps', value: '3' },
+  }
       { label: 'Usuarios', value: '89+' },
       { label: 'Semanas', value: '8' },
     ],
-  },
-  {
-    id: 'versions' as Screen,
-    name: 'Versiones',
-    desc: 'Changelog y gestión de versiones',
-    icon: '📋',
-    color: '#8b5cf6',
-    borderIdle: 'rgba(139,92,246,0.18)',
-    borderHover: 'rgba(139,92,246,0.5)',
-    bgHover: 'rgba(139,92,246,0.06)',
-    topLine: '#8b5cf6',
-    accent: '#0e001a',
-    status: 'LIVE',
-    statusColor: '#22c55e',
-    stats: [
-      { label: 'Versiones', value: '3' },
+  }
       { label: 'Apps', value: '3' },
-      { label: 'Último', value: 'v1.4.0' },
+      { label: 'Ãšltimo', value: 'v1.4.0' },
     ],
   },
   {
     id: 'yavoy' as Screen,
     name: 'Ya Voy!',
-    desc: 'Plataforma de reparto — cliente, restaurante y repartidor',
-    icon: '🛵',
+    desc: 'Plataforma de reparto â€” cliente, restaurante y repartidor',
+    icon: 'ðŸ›µ',
     color: '#f97316',
     borderIdle: 'rgba(249,115,22,0.18)',
     borderHover: 'rgba(249,115,22,0.5)',
@@ -121,7 +76,7 @@ const APPS = [
     statusColor: '#f59e0b',
     stats: [
       { label: 'Apps', value: '3' },
-      { label: 'Pedidos', value: '—' },
+      { label: 'Pedidos', value: 'â€”' },
       { label: 'Estado', value: 'DEV' },
     ],
   },
@@ -129,15 +84,15 @@ const APPS = [
 
 const KPI = [
   { label: 'Apps activas', value: '3', sub: '+1 este mes', color: '#e91e8c' },
-  { label: 'Uptime global', value: '99.8%', sub: 'Últimos 30 días', color: '#22c55e' },
-  { label: 'Versión latest', value: '1.4.0', sub: 'VOR Dashboard', color: '#3b82f6' },
-  { label: 'Entorno', value: 'PROD', sub: 'Vercel · main', color: '#f97316' },
+  { label: 'Uptime global', value: '99.8%', sub: 'Ãšltimos 30 dÃ­as', color: '#22c55e' },
+  { label: 'VersiÃ³n latest', value: '1.4.0', sub: 'VOR Dashboard', color: '#3b82f6' },
+  { label: 'Entorno', value: 'PROD', sub: 'Vercel Â· main', color: '#f97316' },
 ];
 
 const ACTIVITY = [
-  { time: 'Hace 2 min', msg: 'Deploy exitoso — batallagroup-dashboard', type: 'success' },
-  { time: 'Hace 18 min', msg: 'Push a main — fix: Home.tsx reescrito limpio', type: 'info' },
-  { time: 'Hace 1 h', msg: 'Ya Voy! agregado al panel — 3 sub-apps', type: 'info' },
+  { time: 'Hace 2 min', msg: 'Deploy exitoso â€” batallagroup-dashboard', type: 'success' },
+  { time: 'Hace 18 min', msg: 'Push a main â€” fix: Home.tsx reescrito limpio', type: 'info' },
+  { time: 'Hace 1 h', msg: 'Ya Voy! agregado al panel â€” 3 sub-apps', type: 'info' },
   { time: 'Hace 3 h', msg: 'VORDashboard v1.4.0 actualizado', type: 'success' },
   { time: 'Ayer', msg: 'BarrioAlerta conectado a Supabase', type: 'success' },
 ];
@@ -150,10 +105,10 @@ const SYSTEM = [
 ];
 
 const QUICKLINKS = [
-  { label: 'Vercel Dashboard', url: 'https://vercel.com/dashboard', icon: '▲' },
-  { label: 'Supabase Studio', url: 'https://supabase.com/dashboard', icon: '⚡' },
-  { label: 'Repositorio GitHub', url: 'https://github.com', icon: '⬡' },
-  { label: 'Documentación', url: '#', icon: '📄' },
+  { label: 'Vercel Dashboard', url: 'https://vercel.com/dashboard', icon: 'â–²' },
+  { label: 'Supabase Studio', url: 'https://supabase.com/dashboard', icon: 'âš¡' },
+  { label: 'Repositorio GitHub', url: 'https://github.com', icon: 'â¬¡' },
+  { label: 'DocumentaciÃ³n', url: '#', icon: 'ðŸ“„' },
 ];
 
 export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme }: Props) {
@@ -178,7 +133,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
   }).toUpperCase();
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  const greeting = hour < 12 ? 'Buenos dÃ­as' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
 
   return (
     <div style={{
@@ -208,7 +163,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             <span style={{ color: theme.textMuted, fontSize: 17, fontWeight: 900, letterSpacing: '3px' }}>GROUP</span>
           </div>
           <div style={{ width: 1, height: 20, background: '#111120' }} />
-          <span style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÓN</span>
+          <span style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÃ“N</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -223,7 +178,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             onClick={onSearch}
             title="Buscar (Ctrl+K)"
             style={{ background: theme.surface, border: `1px solid `, borderRadius: 8, color: theme.textMuted, fontSize: 12, cursor: 'pointer', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
-          >🔍 <span style={{ fontSize: 10, letterSpacing: '0.1em' }}>CTRL+K</span></button>
+          >ðŸ” <span style={{ fontSize: 10, letterSpacing: '0.1em' }}>CTRL+K</span></button>
           {notifBell}
           <div style={{ width: 1, height: 20, background: '#111120' }} />
           <div style={{
@@ -261,7 +216,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
               (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)';
             }}
           >
-            SALIR ↗
+            SALIR â†—
           </button>
         </div>
       </header>
@@ -269,12 +224,12 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
       <main style={{ position: 'relative', zIndex: 1, padding: '40px 48px 64px', maxWidth: 1400, margin: '0 auto' }}>
 
         <div style={{ marginBottom: 40 }}>
-          <p style={{ color: theme.textDim, fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>━━ CENTRO DE CONTROL</p>
+          <p style={{ color: theme.textDim, fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>â”â” CENTRO DE CONTROL</p>
           <h1 style={{ color: theme.text, fontSize: 36, fontWeight: 900, margin: '0 0 4px', letterSpacing: '1px' }}>
             {greeting}, Ramses
           </h1>
           <p style={{ color: theme.textMuted, fontSize: 13, margin: 0 }}>
-            Tienes <span style={{ color: '#e91e8c', fontWeight: 700 }}>6 módulos</span> activas y todos los sistemas operando con normalidad.
+            Tienes <span style={{ color: '#e91e8c', fontWeight: 700 }}>6 mÃ³dulos</span> activas y todos los sistemas operando con normalidad.
           </p>
         </div>
 
@@ -294,7 +249,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>━━ APLICACIONES CONECTADAS</p>
+          <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>â”â” APLICACIONES CONECTADAS</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 14, marginBottom: 32 }}>
           {sortedApps.map(app => (
@@ -348,9 +303,9 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
                         color: pinnedApps.includes(app.id) ? app.color : '#4a4a78',
                       }}
                     >
-                      {pinnedApps.includes(app.id) ? '📌' : '📍'}
+                      {pinnedApps.includes(app.id) ? 'ðŸ“Œ' : 'ðŸ“'}
                     </button>
-                    <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>→</span>
+                    <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>â†’</span>
                   </div>
                   <span style={{
                     background: `${app.statusColor}18`, border: `1px solid ${app.statusColor}40`,
@@ -378,8 +333,8 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 26px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: 0 }}>━━ ACTIVIDAD RECIENTE</p>
-                <span style={{ color: '#5050a0', fontSize: 10 }}>Ver todo →</span>
+                <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: 0 }}>â”â” ACTIVIDAD RECIENTE</p>
+                <span style={{ color: '#5050a0', fontSize: 10 }}>Ver todo â†’</span>
               </div>
               {ACTIVITY.map((a, i) => (
                 <div key={i} style={{
@@ -401,7 +356,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 26px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 20px' }}>━━ ESTADO DEL SISTEMA</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 20px' }}>â”â” ESTADO DEL SISTEMA</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {SYSTEM.map(s => (
                   <div key={s.label} style={{
@@ -422,7 +377,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 22px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 18px' }}>━━ ACCESO RÁPIDO</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 18px' }}>â”â” ACCESO RÃPIDO</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {QUICKLINKS.map(l => (
                   <a key={l.label} href={l.url} target="_blank" rel="noreferrer"
@@ -437,16 +392,16 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
                     }}>
                     <span style={{ fontSize: 14 }}>{l.icon}</span>
                     <span style={{ color: hoveredLink === l.label ? '#d0d0f0' : '#8080b8', fontSize: 12, flex: 1 }}>{l.label}</span>
-                    <span style={{ color: '#5050a0', fontSize: 10 }}>↗</span>
+                    <span style={{ color: '#5050a0', fontSize: 10 }}>â†—</span>
                   </a>
                 ))}
               </div>
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '22px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ BUILD INFO</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>â”â” BUILD INFO</p>
               {[
-                { label: 'Versión', value: 'v1.4.0' },
+                { label: 'VersiÃ³n', value: 'v1.4.0' },
                 { label: 'Branch', value: 'main' },
                 { label: 'Framework', value: 'React + Vite' },
                 { label: 'Deploy', value: 'Vercel' },
@@ -460,9 +415,9 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             </div>
 
             <div style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: 16, padding: '18px 20px' }}>
-              <p style={{ color: '#f97316', fontSize: 10, letterSpacing: '0.25em', margin: '0 0 8px' }}>━━ NOTA</p>
+              <p style={{ color: '#f97316', fontSize: 10, letterSpacing: '0.25em', margin: '0 0 8px' }}>â”â” NOTA</p>
               <p style={{ color: '#c88848', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
-                Ya Voy! está en desarrollo activo. Conecta las 3 sub-apps para activar métricas reales.
+                Ya Voy! estÃ¡ en desarrollo activo. Conecta las 3 sub-apps para activar mÃ©tricas reales.
               </p>
             </div>
           </div>
@@ -473,9 +428,10 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
         position: 'relative', zIndex: 1, borderTop: '1px solid #0a0a14',
         padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>© 2026 BATALLAGROUP — TODOS LOS DERECHOS RESERVADOS</span>
-        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>V 1.4.0 · PROD</span>
+        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>Â© 2026 BATALLAGROUP â€” TODOS LOS DERECHOS RESERVADOS</span>
+        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>V 1.4.0 Â· PROD</span>
       </footer>
     </div>
   );
 }
+
