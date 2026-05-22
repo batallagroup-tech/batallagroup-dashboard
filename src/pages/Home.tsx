@@ -13,9 +13,9 @@ interface Props {
 const APPS = [
   {
     id: 'vor' as Screen,
-    name: 'VOR â€” Verdad o Reto',
-    desc: 'GestiÃ³n de retos, verdades y contenido del juego',
-    icon: 'ðŸŽ®',
+    name: 'VOR — Verdad o Reto',
+    desc: 'Gestión de retos, verdades y contenido del juego',
+    icon: '🎮',
     color: '#e91e8c',
     borderIdle: 'rgba(233,30,140,0.18)',
     borderHover: 'rgba(233,30,140,0.5)',
@@ -27,14 +27,14 @@ const APPS = [
     stats: [
       { label: 'Retos', value: '2,216' },
       { label: 'Modos', value: '13' },
-      { label: 'VersiÃ³n', value: '1.4.0' },
+      { label: 'Versión', value: '1.4.0' },
     ],
   },
   {
     id: 'barrio' as Screen,
     name: 'BarrioAlerta',
     desc: 'Monitoreo de incidentes y reportes de la comunidad',
-    icon: 'ðŸš¨',
+    icon: '🚨',
     color: '#3b82f6',
     borderIdle: 'rgba(59,130,246,0.18)',
     borderHover: 'rgba(59,130,246,0.5)',
@@ -44,28 +44,16 @@ const APPS = [
     status: 'LIVE',
     statusColor: '#22c55e',
     stats: [
-      { label: 'Incidentes', value: 'â€”' },
-      { label: 'Usuarios', value: 'â€”' },
-      { label: 'Reportes', value: 'â€”' },
-    ],
-  }
-      { label: 'Repartidores', value: '3' },
-      { label: 'Platillos', value: '5' },
-    ],
-  }
-      { label: 'Usuarios', value: '89+' },
-      { label: 'Semanas', value: '8' },
-    ],
-  }
-      { label: 'Apps', value: '3' },
-      { label: 'Ãšltimo', value: 'v1.4.0' },
+      { label: 'Incidentes', value: '—' },
+      { label: 'Usuarios', value: '—' },
+      { label: 'Reportes', value: '—' },
     ],
   },
   {
     id: 'yavoy' as Screen,
     name: 'Ya Voy!',
-    desc: 'Plataforma de reparto â€” cliente, restaurante y repartidor',
-    icon: 'ðŸ›µ',
+    desc: 'Plataforma de reparto — cliente, restaurante y repartidor',
+    icon: '🛵',
     color: '#f97316',
     borderIdle: 'rgba(249,115,22,0.18)',
     borderHover: 'rgba(249,115,22,0.5)',
@@ -76,7 +64,7 @@ const APPS = [
     statusColor: '#f59e0b',
     stats: [
       { label: 'Apps', value: '3' },
-      { label: 'Pedidos', value: 'â€”' },
+      { label: 'Pedidos', value: '—' },
       { label: 'Estado', value: 'DEV' },
     ],
   },
@@ -434,4 +422,5 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
     </div>
   );
 }
+
 
