@@ -2,7 +2,7 @@
 import type { Theme } from '../App';
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+
 
 interface Props { onBack: () => void; theme: Theme; }
 type SubApp = 'restaurante' | 'repartidor' | 'cliente' | null;
@@ -49,9 +49,9 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
   const [procesando, setProcesando] = useState<string | null>(null);
 
   const cargar = async () => {
-    setLoading(true); setError('');
-    try {
-      const data = await sql`
+  setLoading(true); setError('');
+  try {
+    const sql = neon(import.meta.env.VITE_DATABASE_URL!);
         SELECT s.*, u.email as usuario_email
         FROM solicitudes s
         LEFT JOIN usuarios u ON u.id = s.usuario_id
