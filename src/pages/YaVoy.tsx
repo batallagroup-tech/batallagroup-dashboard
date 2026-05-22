@@ -45,7 +45,7 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
   const cargar = async () => {
     setLoading(true); setError('');
     try {
-      const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+      const db = neon(import.meta.env.VITE_DATABASE_URL!);
       const data = await sql('SELECT s.*, u.email as usuario_email FROM solicitudes s LEFT JOIN usuarios u ON u.id = s.usuario_id WHERE s.tipo = $1 ORDER BY s.creado_en DESC', ['negocio']);
       setSolicitudes(data as Solicitud[]);
     } catch (err: any) {
@@ -60,8 +60,8 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
   const aprobar = async (s: Solicitud) => {
     setProcesando(s.id);
     try {
-      const sql = neon(import.meta.env.VITE_DATABASE_URL!);
-      await sql('INSERT INTO viveres (owner_id, nombre_negocio, tipo_negocio, telefono, direccion, foto_url, status) VALUES ($1,$2,$3,$4,$5,$6,$7)', [s.usuario_id, s.datos?.nombre_negocio ?? '', s.datos?.tipo_negocio ?? '', s.datos?.telefono ?? '', s.datos?.direccion ?? '', s.datos?.foto_url ?? '', 'aprobado']);
+      const db = neon(import.meta.env.VITE_DATABASE_URL!);
+      await db.query('INSERT INTO viveres (owner_id, nombre_negocio, tipo_negocio, telefono, direccion, foto_url, status) VALUES ($1,$2,$3,$4,$5,$6,$7)', [s.usuario_id, s.datos?.nombre_negocio ?? '', s.datos?.tipo_negocio ?? '', s.datos?.telefono ?? '', s.datos?.direccion ?? '', s.datos?.foto_url ?? '', 'aprobado']);
       await sql('UPDATE solicitudes SET status = $1 WHERE id = $2', ['aprobado', s.id]);
       await cargar();
     } catch (err: any) {
@@ -75,7 +75,7 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     if (!razon.trim()) return;
     setProcesando(id);
     try {
-      const sql = neon(import.meta.env.VITE_DATABASE_URL!);
+      const db = neon(import.meta.env.VITE_DATABASE_URL!);
       await sql('UPDATE solicitudes SET status = $1, razon_rechazo = $2 WHERE id = $3', ['rechazado', razon, id]);
       setRechazando(null); setRazon('');
       await cargar();
@@ -251,3 +251,4 @@ export default function YaVoy({ onBack, theme }: Props) {
     </div>
   );
 }
+
