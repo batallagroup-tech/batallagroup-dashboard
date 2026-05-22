@@ -62,7 +62,7 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     try {
       const db = neon(import.meta.env.VITE_DATABASE_URL!);
       await db.query('INSERT INTO viveres (owner_id, nombre_negocio, tipo_negocio, telefono, direccion, foto_url, status) VALUES ($1,$2,$3,$4,$5,$6,$7)', [s.usuario_id, s.datos?.nombre_negocio ?? '', s.datos?.tipo_negocio ?? '', s.datos?.telefono ?? '', s.datos?.direccion ?? '', s.datos?.foto_url ?? '', 'aprobado']);
-      await sql('UPDATE solicitudes SET status = $1 WHERE id = $2', ['aprobado', s.id]);
+      await db.query('UPDATE solicitudes SET status = $1 WHERE id = $2', ['aprobado', s.id]);
       await cargar();
     } catch (err: any) {
       setError('Error al aprobar: ' + err.message);
@@ -76,7 +76,7 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     setProcesando(id);
     try {
       const db = neon(import.meta.env.VITE_DATABASE_URL!);
-      await sql('UPDATE solicitudes SET status = $1, razon_rechazo = $2 WHERE id = $3', ['rechazado', razon, id]);
+      await db.query('UPDATE solicitudes SET status = $1, razon_rechazo = $2 WHERE id = $3', ['rechazado', razon, id]);
       setRechazando(null); setRazon('');
       await cargar();
     } catch (err: any) {
