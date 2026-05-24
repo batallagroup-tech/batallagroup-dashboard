@@ -60,7 +60,11 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     finally { setLoading(false); }
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+    const iv = setInterval(cargar, 10000); // refresca cada 10s
+    return () => clearInterval(iv);
+  }, []);
 
   const aprobar = async (s: Solicitud) => {
     setProc(s.id);
@@ -192,7 +196,11 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { cargar(); }, []);
+  useEffect(() => {
+    cargar();
+    const iv = setInterval(cargar, 10000); // refresca cada 10s
+    return () => clearInterval(iv);
+  }, []);
 
   const getNombre = (s: Solicitud) => nombreEdit[s.id] ?? s.datos?.nombre ?? "";
 
