@@ -200,8 +200,8 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
     setProc(s.id);
     const nombre = getNombre(s);
     try {
-      const vehiculo = `${s.datos?.vehiculo_tipo || ""} ${s.datos?.vehiculo_modelo || ""}`.trim();
-      const docs = JSON.stringify({ ...s.documentos, nombre_ine: nombre, telefono: s.datos?.telefono });
+      const vehiculo = s.datos?.vehiculo_tipo || "moto";
+      const docs = JSON.stringify({ ...s.documentos, nombre_ine: nombre, telefono: s.datos?.telefono, vehiculo_modelo: s.datos?.vehiculo_modelo });
       // Crear/actualizar en repartidores
       const existe = await db().query("SELECT id FROM repartidores WHERE id = $1", [s.usuario_id]);
       if (existe.length > 0) {
