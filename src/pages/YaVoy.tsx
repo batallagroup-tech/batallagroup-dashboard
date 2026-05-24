@@ -77,7 +77,7 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
       const db = neon(import.meta.env.VITE_DATABASE_URL!);
       await db.query(
         'INSERT INTO viveres (owner_id, nombre_negocio, tipo_negocio, telefono, direccion, foto_url, status) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-        [s.usuario_id, s.datos?.nombre_negocio ?? '', s.datos?.tipo_negocio ?? '', s.datos?.telefono ?? '', s.datos?.direccion ?? '', s.datos?.foto_url ?? '', 'aprobado']
+        [s.usuario_id, s.datos?.nombre_negocio ?? '', s.datos?.tipo_negocio ?? '', s.datos?.direccion ?? '', s.datos?.foto_url ?? '', 'aprobado']
       );
       await db.query('UPDATE solicitudes SET status = $1 WHERE id = $2', ['aprobado', s.id]);
       await cargar();
