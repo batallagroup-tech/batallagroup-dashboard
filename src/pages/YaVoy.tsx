@@ -203,10 +203,14 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
       const vehiculo = `${s.datos?.vehiculo_tipo || ""} ${s.datos?.vehiculo_modelo || ""}`.trim();
       const docs = JSON.stringify({ ...s.documentos, nombre_ine: nombre, telefono: s.datos?.telefono });
       // Crear/actualizar en repartidores
-      await db().query(
-        "INSERT INTO repartidores (id, vehiculo, placa, status, verificado, documentos, rating) VALUES ($1,$2,$3,'offline',true,$4::jsonb,5.0) ON CONFLICT (id) DO UPDATE SET vehiculo=EXCLUDED.vehiculo, placa=EXCLUDED.placa, verificado=true, documentos=EXCLUDED.documentos",
-        [s.usuario_id, vehiculo, s.datos?.vehiculo_placas ?? "", docs]
-      );
+      const existe = await db().query("SELECT id FROM repartidores WHERE id = $1", [s.usuario_id]);
+      if (existe.length > 0) {
+        await db().query("UPDATE repartidores SET vehiculo=$1, placa=$2, verificado=true, documentos=$3::jsonb WHERE id=$4",
+          [vehiculo, s.datos?.vehiculo_placas ?? "", docs, s.usuario_id]);
+      } else {
+        await db().query("INSERT INTO repartidores (id, vehiculo, placa, status, verificado, documentos, rating) VALUES ($1,$2,$3,'offline',true,$4::jsonb,5.0)",
+          [s.usuario_id, vehiculo, s.datos?.vehiculo_placas ?? "", docs]);
+      }
       // Actualizar nombre en usuarios con el nombre del INE
       await db().query("UPDATE usuarios SET nombre=$1 WHERE id=$2", [nombre, s.usuario_id]);
       // Marcar solicitud como aprobada
@@ -399,3 +403,4 @@ export default function YaVoy({ onBack, theme }: Props) {
     </div>
   );
 }
+
