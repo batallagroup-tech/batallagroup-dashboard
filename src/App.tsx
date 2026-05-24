@@ -142,6 +142,33 @@ function NotifBell({ theme }: { theme: Theme }) {
   );
 }
 
+
+function RealtimeIndicator({ theme }: { theme: Theme }) {
+  const [glow, setGlow] = useState(false);
+  useEffect(() => {
+    const iv = setInterval(() => setGlow(v => !v), 1200);
+    return () => clearInterval(iv);
+  }, []);
+  return (
+    <div style={{
+      position: "fixed", bottom: 20, right: 116, zIndex: 9999,
+      display: "flex", alignItems: "center", gap: 6,
+      background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)",
+      borderRadius: 20, padding: "5px 12px", backdropFilter: "blur(8px)",
+      cursor: "default", userSelect: "none",
+    }}>
+      <div style={{
+        width: 7, height: 7, borderRadius: "50%", background: "#22c55e",
+        boxShadow: glow ? "0 0 10px 3px rgba(34,197,94,0.6)" : "0 0 4px rgba(34,197,94,0.3)",
+        transition: "box-shadow 0.6s ease",
+      }} />
+      <span style={{ color: "#22c55e", fontSize: 9, fontWeight: 900, letterSpacing: "0.2em" }}>
+        TIEMPO REAL
+      </span>
+    </div>
+  );
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>(() => sessionStorage.getItem('bg_auth') === '1' ? 'home' : 'login');
   const [dark, setDark] = useState(true);
@@ -162,6 +189,7 @@ export default function App() {
 
   return (
     <>
+      {screen !== "login" && <RealtimeIndicator theme={theme} />}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onNavigate={handleNavigate} theme={theme} />}
       <FullscreenButton theme={theme} />
       <ThemeButton dark={dark} onToggle={() => setDark(v => !v)} theme={theme} />

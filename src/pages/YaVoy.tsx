@@ -100,7 +100,10 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
           <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>🍽️ Ya Voy Restaurante</h1>
           <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>SOLICITUDES · NEON</p>
         </div>
-        <button onClick={cargar} style={{ marginLeft: "auto", ...btn("#3b82f6") }}>↻ Actualizar</button>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "5px 14px" }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", animation: "pulse 1.5s infinite" }} />
+          <span style={{ color: "#22c55e", fontSize: 9, fontWeight: 900, letterSpacing: "0.2em" }}>TIEMPO REAL</span>
+        </div>
       </div>
       <div style={{ padding: "24px 28px", maxWidth: 900, margin: "0 auto" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 24 }}>
@@ -251,7 +254,10 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
           <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>🛵 Ya Voy Repartidor</h1>
           <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>SOLICITUDES · NEON</p>
         </div>
-        <button onClick={cargar} style={{ marginLeft: "auto", ...btn("#3b82f6") }}>↻ Actualizar</button>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "5px 14px" }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", animation: "pulse 1.5s infinite" }} />
+          <span style={{ color: "#22c55e", fontSize: 9, fontWeight: 900, letterSpacing: "0.2em" }}>TIEMPO REAL</span>
+        </div>
       </div>
 
       <div style={{ padding: "24px 28px", maxWidth: 900, margin: "0 auto" }}>
