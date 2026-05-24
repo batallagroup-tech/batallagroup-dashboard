@@ -143,7 +143,7 @@ function NotifBell({ theme }: { theme: Theme }) {
 }
 
 
-function RealtimeIndicator({ theme }: { theme: Theme }) {
+function RealtimeIndicator() {
   const [glow, setGlow] = useState(false);
   useEffect(() => {
     const iv = setInterval(() => setGlow(v => !v), 1200);
@@ -189,7 +189,7 @@ export default function App() {
 
   return (
     <>
-      {screen !== "login" && <RealtimeIndicator theme={theme} />}
+      {screen !== "login" && <RealtimeIndicator />}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} onNavigate={handleNavigate} theme={theme} />}
       <FullscreenButton theme={theme} />
       <ThemeButton dark={dark} onToggle={() => setDark(v => !v)} theme={theme} />
