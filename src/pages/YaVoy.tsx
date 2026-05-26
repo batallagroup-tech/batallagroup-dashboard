@@ -1,9 +1,9 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import type { Theme } from "../App";
 import { neon } from "@neondatabase/serverless";
 
 interface Props { onBack: () => void; theme: Theme }
-type SubApp = "restaurante" | "repartidor" | "cliente" | null;
+type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | null;
 
 interface Solicitud {
   id: string;
@@ -21,6 +21,7 @@ const SUBAPPS = [
   { id: "restaurante", name: "Ya Voy Restaurante", icon: "🍽️", desc: "Solicitudes y panel de restaurantes" },
   { id: "repartidor",  name: "Ya Voy Repartidor",  icon: "🛵", desc: "Solicitudes de repartidores" },
   { id: "cliente",     name: "Ya Voy Cliente",      icon: "📱", desc: "App para pedir comida a domicilio" },
+  { id: "config",      name: "Configuración",        icon: "⚙️",  desc: "Email, WhatsApp y URLs del sistema" },
 ];
 
 const STATUS_COLOR: Record<string, string> = { pendiente: "#f59e0b", aprobado: "#22c55e", rechazado: "#ef4444" };
@@ -379,11 +380,97 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
   );
 }
 
+
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
+  const [config, setConfig] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  const CAMPOS = [
+    { clave: "soporte_email", label: "Email de soporte", icon: "📧", desc: "Correo visible en Ayuda y soporte dentro de la app" },
+    { clave: "whatsapp",      label: "WhatsApp",          icon: "💬", desc: "URL completa: https://wa.me/52XXXXXXXXXX" },
+    { clave: "privacidad_url",label: "Política de Privacidad", icon: "🔒", desc: "URL pública de la política de privacidad" },
+  ];
+
+  const cargar = async () => {
+    setLoading(true); setError("");
+    try {
+      const data = await db().query("SELECT clave, valor FROM app_config ORDER BY clave") as any[];
+      const obj: Record<string, string> = {};
+      for (const row of data) obj[row.clave] = row.valor ?? "";
+      setConfig(obj);
+    } catch (e: any) { setError("Error cargando config: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { cargar(); }, []);
+
+  const guardar = async (clave: string) => {
+    setSaving(clave); setError("");
+    try {
+      await db().query("UPDATE app_config SET valor = $1 WHERE clave = $2", [config[clave] ?? "", clave]);
+      setSaved(clave);
+      setTimeout(() => setSaved(null), 2000);
+    } catch (e: any) { setError("Error guardando: " + e.message); }
+    finally { setSaving(null); }
+  };
+
+  const btn = (color: string) => ({
+    background: `${color}20`, border: `1px solid ${color}40`, borderRadius: 8,
+    color, padding: "8px 18px", cursor: "pointer", fontSize: 12, fontWeight: 700,
+  });
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
+      <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
+        <button onClick={onBack} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.textMuted, padding: "8px 16px", cursor: "pointer", fontSize: 12 }}>← Volver</button>
+        <div>
+          <h1 style={{ color: theme.text, fontSize: 18, fontWeight: 900, margin: 0 }}>⚙️ Configuración</h1>
+          <p style={{ color: theme.textDim, fontSize: 11, margin: "2px 0 0", letterSpacing: "0.15em" }}>VALORES GLOBALES DE LA APP</p>
+        </div>
+      </div>
+      <div style={{ padding: "32px 28px", maxWidth: 600, margin: "0 auto" }}>
+        {error && <div style={{ background: "#ef444415", border: "1px solid #ef444440", borderRadius: 10, padding: "12px 16px", color: "#ef4444", fontSize: 13, marginBottom: 20 }}>{error}</div>}
+        {loading ? (
+          <p style={{ color: theme.textDim, textAlign: "center", paddingTop: 60 }}>Cargando...</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
+            {CAMPOS.map(({ clave, label, icon, desc }) => (
+              <div key={clave} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 18 }}>{icon}</span>
+                  <span style={{ color: theme.text, fontSize: 14, fontWeight: 900 }}>{label}</span>
+                  {saved === clave && <span style={{ marginLeft: "auto", color: "#22c55e", fontSize: 12, fontWeight: 700 }}>✔ Guardado</span>}
+                </div>
+                <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 12px" }}>{desc}</p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={config[clave] ?? ""}
+                    onChange={e => setConfig(prev => ({ ...prev, [clave]: e.target.value }))}
+                    placeholder={`Valor de ${label}...`}
+                    style={{ flex: 1, background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "10px 14px", fontSize: 13, outline: "none" }}
+                  />
+                  <button onClick={() => guardar(clave)} disabled={saving === clave} style={{ ...btn("#3b82f6"), opacity: saving === clave ? 0.5 : 1 }}>
+                    {saving === clave ? "..." : "Guardar"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export default function YaVoy({ onBack, theme }: Props) {
   const [sub, setSub] = useState<SubApp>(null);
   if (sub === "restaurante") return <RestauranteAdmin onBack={() => setSub(null)} theme={theme} />;
   if (sub === "repartidor")  return <RepartidorAdmin  onBack={() => setSub(null)} theme={theme} />;
+  if (sub === "config")       return <ConfigAdmin       onBack={() => setSub(null)} theme={theme} />;
   if (sub) {
     const app = SUBAPPS.find(a => a.id === sub)!;
     return (
