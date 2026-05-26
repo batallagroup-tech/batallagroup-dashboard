@@ -422,13 +422,18 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
 
   useEffect(() => { cargar() }, [])
 
-  const eliminarUsuario = async (id: string) => {
-    if (!confirm("¿Eliminar este usuario? Esta acción no se puede deshacer.")) return
+  const eliminarUsuario = async (id: string, nombre: string) => {
+    if (!window.confirm(`¿Eliminar a "${nombre}"? Se eliminarán también sus pedidos, solicitudes y negocios. Esta acción no se puede deshacer.`)) return
     setEliminando(id)
     try {
+      await db().query("DELETE FROM pedidos WHERE cliente_id = $1", [id])
+      await db().query("DELETE FROM solicitudes WHERE usuario_id = $1", [id])
+      await db().query("DELETE FROM viveres WHERE owner_id = $1", [id])
+      await db().query("DELETE FROM repartidores WHERE id = $1", [id])
+      await db().query("DELETE FROM device_tokens WHERE user_id = $1", [id])
       await db().query("DELETE FROM usuarios WHERE id = $1", [id])
       setUsuarios(prev => prev.filter(u => u.id !== id))
-    } catch(e: any) { setError("Error: " + e.message) }
+    } catch(e: any) { setError("Error al eliminar: " + e.message) }
     finally { setEliminando(null) }
   }
 
@@ -531,7 +536,7 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
                       <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 2px" }}>{u.email}</p>
                       <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>Rol: {u.rol} · {new Date(u.creado_en).toLocaleDateString("es-MX")}</p>
                     </div>
-                    <button onClick={() => eliminarUsuario(u.id)} disabled={eliminando === u.id} style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700, opacity: eliminando === u.id ? 0.5 : 1 }}>{eliminando === u.id ? "..." : "Eliminar"}</button>
+                    <button onClick={() => eliminarUsuario(u.id, u.nombre || u.email)} disabled={eliminando === u.id} style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700, opacity: eliminando === u.id ? 0.5 : 1 }}>{eliminando === u.id ? "..." : "Eliminar"}</button>
                   </div>
                 ))}
                 {usuariosFiltrados.length === 0 && <p style={{ color: theme.textDim, textAlign: "center", padding: "40px 0" }}>Sin usuarios</p>}
