@@ -381,6 +381,168 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
 }
 
 
+
+// ─── CLIENTE ─────────────────────────────────────────────────────────────────
+function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
+  const [tab, setTab] = useState<"metricas"|"pedidos"|"usuarios">("metricas")
+  const [stats, setStats] = useState({ pedidosHoy: 0, totalUsuarios: 0, restaurantesActivos: 0, repartidoresActivos: 0, ingresoHoy: 0 })
+  const [pedidos, setPedidos] = useState<any[]>([])
+  const [usuarios, setUsuarios] = useState<any[]>([])
+  const [busqueda, setBusqueda] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [eliminando, setEliminando] = useState<string|null>(null)
+  const [filtroStatus, setFiltroStatus] = useState("todos")
+
+  const cargar = async () => {
+    setLoading(true); setError("")
+    try {
+      const [statsRes, pedidosRes, usuariosRes] = await Promise.all([
+        db().query(`SELECT
+          (SELECT COUNT(*) FROM pedidos WHERE creado_en::date = CURRENT_DATE) as pedidos_hoy,
+          (SELECT COUNT(*) FROM usuarios WHERE rol = 'cliente') as total_usuarios,
+          (SELECT COUNT(*) FROM viveres WHERE status = 'aprobado') as restaurantes_activos,
+          (SELECT COUNT(*) FROM repartidores WHERE status = 'online') as repartidores_activos,
+          (SELECT COALESCE(SUM(total),0) FROM pedidos WHERE creado_en::date = CURRENT_DATE AND status = 'entregado') as ingreso_hoy
+        `),
+        db().query(`SELECT p.*, u.email as cliente_email, v.nombre as negocio_nombre
+          FROM pedidos p
+          LEFT JOIN usuarios u ON u.id = p.cliente_id
+          LEFT JOIN viveres v ON v.id = p.negocio_id
+          ORDER BY p.creado_en DESC LIMIT 100`),
+        db().query(`SELECT * FROM usuarios ORDER BY creado_en DESC LIMIT 200`)
+      ])
+      const s = statsRes[0]
+      setStats({ pedidosHoy: Number(s.pedidos_hoy), totalUsuarios: Number(s.total_usuarios), restaurantesActivos: Number(s.restaurantes_activos), repartidoresActivos: Number(s.repartidores_activos), ingresoHoy: Number(s.ingreso_hoy) })
+      setPedidos(pedidosRes as any[])
+      setUsuarios(usuariosRes as any[])
+    } catch(e: any) { setError("Error: " + e.message) }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { cargar() }, [])
+
+  const eliminarUsuario = async (id: string) => {
+    if (!confirm("¿Eliminar este usuario? Esta acción no se puede deshacer.")) return
+    setEliminando(id)
+    try {
+      await db().query("DELETE FROM usuarios WHERE id = $1", [id])
+      setUsuarios(prev => prev.filter(u => u.id !== id))
+    } catch(e: any) { setError("Error: " + e.message) }
+    finally { setEliminando(null) }
+  }
+
+  const STATUS_COLOR: Record<string, string> = { nuevo: "#f59e0b", preparando: "#3b82f6", listo: "#8b5cf6", en_camino: "#f97316", entregado: "#22c55e", cancelado: "#ef4444", esperando_cliente: "#ec4899" }
+  const pedidosFiltrados = pedidos.filter(p => filtroStatus === "todos" || p.status === filtroStatus)
+  const usuariosFiltrados = usuarios.filter(u => !busqueda || u.email?.toLowerCase().includes(busqueda.toLowerCase()) || u.nombre?.toLowerCase().includes(busqueda.toLowerCase()))
+
+  const card = (label: string, value: string|number, icon: string, color: string) => (
+    <div style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px", flex: 1, minWidth: 140 }}>
+      <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
+      <p style={{ color, fontSize: 26, fontWeight: 900, margin: "0 0 4px" }}>{value}</p>
+      <p style={{ color: theme.textDim, fontSize: 11, margin: 0, letterSpacing: "0.1em" }}>{label.toUpperCase()}</p>
+    </div>
+  )
+
+  const tabBtn = (id: string, label: string) => (
+    <button onClick={() => setTab(id as any)} style={{ background: tab === id ? "#3b82f6" : theme.surface, border: `1px solid ${tab === id ? "#3b82f6" : theme.border}`, borderRadius: 8, color: tab === id ? "#fff" : theme.textMuted, padding: "8px 20px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{label}</button>
+  )
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
+      <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
+        <button onClick={onBack} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.textMuted, padding: "8px 16px", cursor: "pointer", fontSize: 12 }}>← Volver</button>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ color: theme.text, fontSize: 18, fontWeight: 900, margin: 0 }}>📱 Ya Voy Cliente</h1>
+          <p style={{ color: theme.textDim, fontSize: 11, margin: "2px 0 0", letterSpacing: "0.15em" }}>PEDIDOS · USUARIOS · MÉTRICAS</p>
+        </div>
+        <button onClick={cargar} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.textMuted, padding: "8px 14px", cursor: "pointer", fontSize: 12 }}>↻ Actualizar</button>
+      </div>
+      <div style={{ padding: "24px 28px" }}>
+        {error && <div style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 10, padding: "12px 16px", color: "#ef4444", fontSize: 13, marginBottom: 16 }}>{error}</div>}
+        <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+          {tabBtn("metricas", "📊 Métricas")}
+          {tabBtn("pedidos", "🛵 Pedidos")}
+          {tabBtn("usuarios", "👤 Usuarios")}
+        </div>
+        {loading ? <p style={{ color: theme.textDim, textAlign: "center", paddingTop: 60 }}>Cargando...</p> : <>
+          {tab === "metricas" && (
+            <div>
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" as const, marginBottom: 24 }}>
+                {card("Pedidos hoy", stats.pedidosHoy, "🛵", "#f97316")}
+                {card("Usuarios", stats.totalUsuarios, "👤", "#3b82f6")}
+                {card("Restaurantes activos", stats.restaurantesActivos, "🍽️", "#22c55e")}
+                {card("Repartidores online", stats.repartidoresActivos, "🟢", "#8b5cf6")}
+              </div>
+              <div style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
+                <p style={{ color: theme.textDim, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", margin: "0 0 16px" }}>INGRESOS HOY (PEDIDOS ENTREGADOS)</p>
+                <p style={{ color: "#22c55e", fontSize: 32, fontWeight: 900, margin: 0 }}>MXN ${Number(stats.ingresoHoy).toFixed(2)}</p>
+              </div>
+              <div style={{ marginTop: 16, background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
+                <p style={{ color: theme.textDim, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", margin: "0 0 16px" }}>ÚLTIMOS 5 PEDIDOS</p>
+                {pedidos.slice(0, 5).map(p => (
+                  <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${theme.border}` }}>
+                    <div>
+                      <p style={{ color: theme.text, fontSize: 13, fontWeight: 700, margin: "0 0 2px" }}>#{p.numero} — {p.negocio_nombre || "—"}</p>
+                      <p style={{ color: theme.textDim, fontSize: 11, margin: 0 }}>{p.cliente_email || "—"}</p>
+                    </div>
+                    <div style={{ textAlign: "right" as const }}>
+                      <span style={{ background: `${STATUS_COLOR[p.status] || "#64748b"}20`, color: STATUS_COLOR[p.status] || "#64748b", border: `1px solid ${STATUS_COLOR[p.status] || "#64748b"}40`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700 }}>{p.status}</span>
+                      <p style={{ color: theme.textMuted, fontSize: 11, margin: "4px 0 0" }}>MXN ${Number(p.total).toFixed(2)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {tab === "pedidos" && (
+            <div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" as const }}>
+                {["todos","nuevo","preparando","en_camino","entregado","cancelado"].map(s => (
+                  <button key={s} onClick={() => setFiltroStatus(s)} style={{ background: filtroStatus === s ? (STATUS_COLOR[s] || "#3b82f6") : theme.surface, border: `1px solid ${filtroStatus === s ? (STATUS_COLOR[s] || "#3b82f6") : theme.border}`, borderRadius: 20, color: filtroStatus === s ? "#fff" : theme.textMuted, padding: "5px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>{s}</button>
+                ))}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                {pedidosFiltrados.map(p => (
+                  <div key={p.id} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 12, padding: "16px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <p style={{ color: theme.text, fontSize: 13, fontWeight: 900, margin: "0 0 2px" }}>#{p.numero} — {p.negocio_nombre || "—"}</p>
+                      <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 2px" }}>{p.cliente_email || "—"}</p>
+                      <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>{new Date(p.creado_en).toLocaleDateString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                    </div>
+                    <div style={{ textAlign: "right" as const }}>
+                      <span style={{ background: `${STATUS_COLOR[p.status] || "#64748b"}20`, color: STATUS_COLOR[p.status] || "#64748b", border: `1px solid ${STATUS_COLOR[p.status] || "#64748b"}40`, borderRadius: 20, padding: "3px 10px", fontSize: 10, fontWeight: 700 }}>{p.status}</span>
+                      <p style={{ color: theme.text, fontSize: 13, fontWeight: 900, margin: "6px 0 0" }}>MXN ${Number(p.total).toFixed(2)}</p>
+                    </div>
+                  </div>
+                ))}
+                {pedidosFiltrados.length === 0 && <p style={{ color: theme.textDim, textAlign: "center", padding: "40px 0" }}>Sin pedidos</p>}
+              </div>
+            </div>
+          )}
+          {tab === "usuarios" && (
+            <div>
+              <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar por nombre o email..." style={{ width: "100%", background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 10, color: theme.text, padding: "12px 16px", fontSize: 13, outline: "none", marginBottom: 16, boxSizing: "border-box" as const }} />
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                {usuariosFiltrados.map(u => (
+                  <div key={u.id} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <p style={{ color: theme.text, fontSize: 13, fontWeight: 700, margin: "0 0 2px" }}>{u.nombre || "Sin nombre"}</p>
+                      <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 2px" }}>{u.email}</p>
+                      <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>Rol: {u.rol} · {new Date(u.creado_en).toLocaleDateString("es-MX")}</p>
+                    </div>
+                    <button onClick={() => eliminarUsuario(u.id)} disabled={eliminando === u.id} style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700, opacity: eliminando === u.id ? 0.5 : 1 }}>{eliminando === u.id ? "..." : "Eliminar"}</button>
+                  </div>
+                ))}
+                {usuariosFiltrados.length === 0 && <p style={{ color: theme.textDim, textAlign: "center", padding: "40px 0" }}>Sin usuarios</p>}
+              </div>
+            </div>
+          )}
+        </>}
+      </div>
+    </div>
+  )
+}
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const [config, setConfig] = useState<Record<string, string>>({});
@@ -471,6 +633,7 @@ export default function YaVoy({ onBack, theme }: Props) {
   if (sub === "restaurante") return <RestauranteAdmin onBack={() => setSub(null)} theme={theme} />;
   if (sub === "repartidor")  return <RepartidorAdmin  onBack={() => setSub(null)} theme={theme} />;
   if (sub === "config")       return <ConfigAdmin       onBack={() => setSub(null)} theme={theme} />;
+  if (sub === "cliente")      return <ClienteAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub) {
     const app = SUBAPPS.find(a => a.id === sub)!;
     return (
