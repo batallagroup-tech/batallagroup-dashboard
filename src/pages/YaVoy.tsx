@@ -3,7 +3,7 @@ import type { Theme } from "../App";
 import { neon } from "@neondatabase/serverless";
 
 interface Props { onBack: () => void; theme: Theme }
-type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | null;
+type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | null;
 
 interface Solicitud {
   id: string;
@@ -21,7 +21,8 @@ const SUBAPPS = [
   { id: "restaurante", name: "Ya Voy Restaurante", icon: "🍽️", desc: "Solicitudes y panel de restaurantes" },
   { id: "repartidor",  name: "Ya Voy Repartidor",  icon: "🛵", desc: "Solicitudes de repartidores" },
   { id: "cliente",     name: "Ya Voy Cliente",      icon: "📱", desc: "App para pedir comida a domicilio" },
-  { id: "config",      name: "Configuración",        icon: "⚙️",  desc: "Email, WhatsApp y URLs del sistema" },
+  { id: "config",      name: "Configuracion",        icon: "⚙️",  desc: "Email, WhatsApp y URLs del sistema" },
+  { id: "soporte",     name: "Soporte",               icon: "🎧",  desc: "Reportes de usuarios — ayuda y problemas" },
 ];
 
 const STATUS_COLOR: Record<string, string> = { pendiente: "#f59e0b", aprobado: "#22c55e", rechazado: "#ef4444" };
@@ -632,6 +633,109 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     </div>
   );
 }
+// ─── SOPORTE ─────────────────────────────────────────────────────────────────
+function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
+  const [reportes, setReportes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filtro, setFiltro] = useState("todos");
+  const [procesando, setProc] = useState<string | null>(null);
+  const [notaAdmin, setNotaAdmin] = useState<Record<string, string>>({});
+  const [expandido, setExp] = useState<string | null>(null);
+
+  const cargar = async () => {
+    setLoading(true); setError("");
+    try {
+      const data = await db().query("SELECT * FROM reportes_soporte ORDER BY creado_en DESC LIMIT 300") as any[];
+      setReportes(data);
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { cargar(); const iv = setInterval(cargar, 15000); return () => clearInterval(iv); }, []);
+
+  const actualizar = async (id: string, status: string) => {
+    setProc(id);
+    try {
+      await db().query("UPDATE reportes_soporte SET status=$1, nota_admin=$2, resuelto_en=$3 WHERE id=$4",
+        [status, notaAdmin[id] || "", status === "resuelto" ? new Date().toISOString() : null, id]);
+      await cargar();
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setProc(null); }
+  };
+
+  const STATUS_COLOR: Record<string, string> = { nuevo: "#f59e0b", en_revision: "#3b82f6", resuelto: "#22c55e" };
+  const STATUS_LABEL: Record<string, string> = { nuevo: "Nuevo", en_revision: "En revision", resuelto: "Resuelto" };
+  const btn = (c: string) => ({ background: `${c}15`, border: `1px solid ${c}40`, borderRadius: 8, color: c, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 as const });
+  const card = { background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 10 };
+
+  const filtrados = reportes.filter(r => filtro === "todos" || r.status === filtro);
+  const counts = { todos: reportes.length, nuevo: reportes.filter(r => r.status === "nuevo").length, en_revision: reportes.filter(r => r.status === "en_revision").length, resuelto: reportes.filter(r => r.status === "resuelto").length };
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
+      <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "14px 28px", display: "flex", alignItems: "center", gap: 16, position: "sticky" as const, top: 0, zIndex: 100 }}>
+        <button onClick={onBack} style={btn(theme.textMuted)}>← Volver</button>
+        <div>
+          <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>🎧 Soporte</h1>
+          <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>REPORTES DE USUARIOS</p>
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 20, padding: "5px 14px" }}>
+          <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} />
+          <span style={{ color: "#22c55e", fontSize: 9, fontWeight: 900, letterSpacing: "0.2em" }}>TIEMPO REAL</span>
+        </div>
+      </div>
+      <div style={{ padding: "24px 28px", maxWidth: 900, margin: "0 auto" }}>
+        {error && <p style={{ color: "#ef4444", background: "#ef444420", border: "1px solid #ef444440", borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13 }}>{error}</p>}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 24 }}>
+          {(["todos","nuevo","en_revision","resuelto"] as const).map(t => {
+            const color = t === "todos" ? "#64748b" : STATUS_COLOR[t];
+            return (
+              <div key={t} onClick={() => setFiltro(t)} style={{ ...card, borderLeft: `3px solid ${color}`, marginBottom: 0, cursor: "pointer", opacity: filtro === t ? 1 : 0.5 }}>
+                <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 4px" }}>{t === "todos" ? "TODOS" : STATUS_LABEL[t].toUpperCase()}</p>
+                <p style={{ color, fontSize: 24, fontWeight: 900, margin: 0 }}>{counts[t]}</p>
+              </div>
+            );
+          })}
+        </div>
+        {loading ? <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Cargando...</p>
+        : filtrados.length === 0 ? <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Sin reportes {filtro !== "todos" ? filtro : ""}</p>
+        : filtrados.map(r => (
+          <div key={r.id} style={card}>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer" }} onClick={() => setExp(expandido === r.id ? null : r.id)}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: `${STATUS_COLOR[r.status] || "#64748b"}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+                {r.tipo === "Mi pedido no llego" ? "📦" : r.tipo === "El repartidor no llego" ? "🛵" : r.tipo === "Producto incorrecto o en mal estado" ? "⚠️" : r.tipo === "Cobro incorrecto" ? "💳" : r.tipo === "El restaurante no acepto mi pedido" ? "🍽️" : "💬"}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const, marginBottom: 4 }}>
+                  <span style={{ color: theme.text, fontSize: 14, fontWeight: 900 }}>{r.tipo}</span>
+                  <span style={{ background: `${STATUS_COLOR[r.status]}20`, border: `1px solid ${STATUS_COLOR[r.status]}40`, borderRadius: 6, color: STATUS_COLOR[r.status], padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{STATUS_LABEL[r.status]}</span>
+                </div>
+                <p style={{ color: theme.textMuted, fontSize: 12, margin: "0 0 2px" }}>👤 {r.usuario_nombre || r.usuario_email || r.usuario_id}</p>
+                {r.comentario && <p style={{ color: theme.textDim, fontSize: 12, margin: "0 0 2px", fontStyle: "italic" }}>"{r.comentario}"</p>}
+                <p style={{ color: theme.textDim, fontSize: 11, margin: 0 }}>{new Date(r.creado_en).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+              </div>
+              <span style={{ color: theme.textDim, fontSize: 11, flexShrink: 0 }}>{expandido === r.id ? "▲" : "▼"}</span>
+            </div>
+            {expandido === r.id && (
+              <div style={{ marginTop: 14, borderTop: `1px solid ${theme.border}`, paddingTop: 14 }}>
+                {r.nota_admin && <p style={{ color: "#3b82f6", fontSize: 12, background: "#3b82f615", border: "1px solid #3b82f630", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>Nota previa: {r.nota_admin}</p>}
+                <textarea value={notaAdmin[r.id] || ""} onChange={e => setNotaAdmin(prev => ({ ...prev, [r.id]: e.target.value }))}
+                  placeholder="Nota interna (opcional)..."
+                  style={{ width: "100%", minHeight: 60, background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "10px 12px", fontSize: 12, outline: "none", boxSizing: "border-box" as const, resize: "vertical" as const, marginBottom: 10 }} />
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+                  {r.status !== "en_revision" && <button onClick={() => actualizar(r.id, "en_revision")} disabled={procesando === r.id} style={{ ...btn("#3b82f6"), opacity: procesando === r.id ? 0.5 : 1 }}>🔍 En revision</button>}
+                  {r.status !== "resuelto" && <button onClick={() => actualizar(r.id, "resuelto")} disabled={procesando === r.id} style={{ ...btn("#22c55e"), opacity: procesando === r.id ? 0.5 : 1 }}>✔ Marcar resuelto</button>}
+                  {r.status !== "nuevo" && <button onClick={() => actualizar(r.id, "nuevo")} disabled={procesando === r.id} style={{ ...btn("#f59e0b"), opacity: procesando === r.id ? 0.5 : 1 }}>↩ Reabrir</button>}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export default function YaVoy({ onBack, theme }: Props) {
   const [sub, setSub] = useState<SubApp>(null);
@@ -639,6 +743,7 @@ export default function YaVoy({ onBack, theme }: Props) {
   if (sub === "repartidor")  return <RepartidorAdmin  onBack={() => setSub(null)} theme={theme} />;
   if (sub === "config")       return <ConfigAdmin       onBack={() => setSub(null)} theme={theme} />;
   if (sub === "cliente")      return <ClienteAdmin      onBack={() => setSub(null)} theme={theme} />;
+  if (sub === "soporte")      return <SoporteAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub) {
     const app = SUBAPPS.find(a => a.id === sub)!;
     return (
