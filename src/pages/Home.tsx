@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import type { Theme } from '../App';
 import type { Screen } from '../types';
 
@@ -78,9 +78,9 @@ const KPI = [
 ];
 
 const ACTIVITY = [
-  { time: 'Hace 2 min', msg: 'Deploy exitoso â€” batallagroup-dashboard', type: 'success' },
-  { time: 'Hace 18 min', msg: 'Push a main â€” fix: Home.tsx reescrito limpio', type: 'info' },
-  { time: 'Hace 1 h', msg: 'Ya Voy! agregado al panel â€” 3 sub-apps', type: 'info' },
+  { time: 'Hace 2 min', msg: 'Deploy exitoso — batallagroup-dashboard', type: 'success' },
+  { time: 'Hace 18 min', msg: 'Push a main — fix: Home.tsx reescrito limpio', type: 'info' },
+  { time: 'Hace 1 h', msg: 'Ya Voy! agregado al panel — 3 sub-apps', type: 'info' },
   { time: 'Hace 3 h', msg: 'VORDashboard v1.4.0 actualizado', type: 'success' },
   { time: 'Ayer', msg: 'BarrioAlerta conectado a Supabase', type: 'success' },
 ];
@@ -93,10 +93,10 @@ const SYSTEM = [
 ];
 
 const QUICKLINKS = [
-  { label: 'Vercel Dashboard', url: 'https://vercel.com/dashboard', icon: 'â–²' },
-  { label: 'Supabase Studio', url: 'https://supabase.com/dashboard', icon: 'âš¡' },
-  { label: 'Repositorio GitHub', url: 'https://github.com', icon: 'â¬¡' },
-  { label: 'Documentación', url: '#', icon: 'ðŸ“„' },
+  { label: 'Vercel Dashboard', url: 'https://vercel.com/dashboard', icon: '▲' },
+  { label: 'Supabase Studio', url: 'https://supabase.com/dashboard', icon: '⚡' },
+  { label: 'Repositorio GitHub', url: 'https://github.com', icon: '⬡' },
+  { label: 'Documentación', url: '#', icon: '📄' },
 ];
 
 export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme }: Props) {
@@ -130,12 +130,14 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
       fontFamily: "'Inter', system-ui, sans-serif",
       color: theme.text,
     }}>
+      {/* Grid background */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
         backgroundImage: 'linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px)',
         backgroundSize: '60px 60px',
       }} />
 
+      {/* Header */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
         background: 'rgba(5,5,8,0.92)',
@@ -151,7 +153,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
             <span style={{ color: theme.textMuted, fontSize: 17, fontWeight: 900, letterSpacing: '3px' }}>GROUP</span>
           </div>
           <div style={{ width: 1, height: 20, background: '#111120' }} />
-          <span style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÃ“N</span>
+          <span style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em' }}>PANEL DE ADMINISTRACIÓN</span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
@@ -165,8 +167,17 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
           <button
             onClick={onSearch}
             title="Buscar (Ctrl+K)"
-            style={{ background: theme.surface, border: `1px solid `, borderRadius: 8, color: theme.textMuted, fontSize: 12, cursor: 'pointer', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Inter', system-ui, sans-serif" }}
-          >ðŸ” <span style={{ fontSize: 10, letterSpacing: '0.1em' }}>CTRL+K</span></button>
+            style={{
+              background: theme.surface,
+              border: `1px solid ${theme.border}`,
+              borderRadius: 8, color: theme.textMuted, fontSize: 12,
+              cursor: 'pointer', padding: '7px 14px',
+              display: 'flex', alignItems: 'center', gap: 6,
+              fontFamily: "'Inter', system-ui, sans-serif",
+            }}
+          >
+            🔍 <span style={{ fontSize: 10, letterSpacing: '0.1em' }}>CTRL+K</span>
+          </button>
           {notifBell}
           <div style={{ width: 1, height: 20, background: '#111120' }} />
           <div style={{
@@ -200,19 +211,21 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
               (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,107,107,0.3)';
             }}
             onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.color = '#6868a8';
+              (e.currentTarget as HTMLButtonElement).style.color = theme.textMuted;
               (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)';
             }}
           >
-            SALIR â†—
+            SALIR ↗
           </button>
         </div>
       </header>
 
+      {/* Main */}
       <main style={{ position: 'relative', zIndex: 1, padding: '40px 48px 64px', maxWidth: 1400, margin: '0 auto' }}>
 
+        {/* Hero greeting */}
         <div style={{ marginBottom: 40 }}>
-          <p style={{ color: theme.textDim, fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>â”â” CENTRO DE CONTROL</p>
+          <p style={{ color: theme.textDim, fontSize: 11, letterSpacing: '0.4em', margin: '0 0 6px' }}>── CENTRO DE CONTROL</p>
           <h1 style={{ color: theme.text, fontSize: 36, fontWeight: 900, margin: '0 0 4px', letterSpacing: '1px' }}>
             {greeting}, Ramses
           </h1>
@@ -221,6 +234,7 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
           </p>
         </div>
 
+        {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 32 }}>
           {KPI.map(k => (
             <div key={k.label} style={{
@@ -236,8 +250,9 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
           ))}
         </div>
 
+        {/* Apps */}
         <div style={{ marginBottom: 16 }}>
-          <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>â”â” APLICACIONES CONECTADAS</p>
+          <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.35em', margin: 0 }}>── APLICACIONES CONECTADAS</p>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 14, marginBottom: 32 }}>
           {sortedApps.map(app => (
@@ -291,9 +306,9 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
                         color: pinnedApps.includes(app.id) ? app.color : '#4a4a78',
                       }}
                     >
-                      {pinnedApps.includes(app.id) ? 'ðŸ“Œ' : 'ðŸ“'}
+                      {pinnedApps.includes(app.id) ? '📌' : '📍'}
                     </button>
-                    <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>â†’</span>
+                    <span style={{ color: app.color, fontSize: 16, opacity: 0.7 }}>→</span>
                   </div>
                   <span style={{
                     background: `${app.statusColor}18`, border: `1px solid ${app.statusColor}40`,
@@ -317,12 +332,15 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
           ))}
         </div>
 
+        {/* Bottom grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 14 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+            {/* Activity */}
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 26px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: 0 }}>â”â” ACTIVIDAD RECIENTE</p>
-                <span style={{ color: '#5050a0', fontSize: 10 }}>Ver todo â†’</span>
+                <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: 0 }}>── ACTIVIDAD RECIENTE</p>
+                <span style={{ color: '#5050a0', fontSize: 10 }}>Ver todo →</span>
               </div>
               {ACTIVITY.map((a, i) => (
                 <div key={i} style={{
@@ -343,8 +361,9 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
               ))}
             </div>
 
+            {/* System status */}
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 26px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 20px' }}>â”â” ESTADO DEL SISTEMA</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 20px' }}>── ESTADO DEL SISTEMA</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 {SYSTEM.map(s => (
                   <div key={s.label} style={{
@@ -364,8 +383,10 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+            {/* Quick links */}
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px 22px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 18px' }}>â”â” ACCESO RÃPIDO</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 18px' }}>── ACCESO RÁPIDO</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {QUICKLINKS.map(l => (
                   <a key={l.label} href={l.url} target="_blank" rel="noreferrer"
@@ -380,14 +401,15 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
                     }}>
                     <span style={{ fontSize: 14 }}>{l.icon}</span>
                     <span style={{ color: hoveredLink === l.label ? '#d0d0f0' : '#8080b8', fontSize: 12, flex: 1 }}>{l.label}</span>
-                    <span style={{ color: '#5050a0', fontSize: 10 }}>â†—</span>
+                    <span style={{ color: '#5050a0', fontSize: 10 }}>↗</span>
                   </a>
                 ))}
               </div>
             </div>
 
+            {/* Build info */}
             <div style={{ background: 'rgba(255,255,255,0.018)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '22px' }}>
-              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>â”â” BUILD INFO</p>
+              <p style={{ color: '#6a6aaa', fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>── BUILD INFO</p>
               {[
                 { label: 'Versión', value: 'v1.4.0' },
                 { label: 'Branch', value: 'main' },
@@ -402,8 +424,9 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
               ))}
             </div>
 
+            {/* Ya Voy note */}
             <div style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)', borderRadius: 16, padding: '18px 20px' }}>
-              <p style={{ color: '#f97316', fontSize: 10, letterSpacing: '0.25em', margin: '0 0 8px' }}>â”â” NOTA</p>
+              <p style={{ color: '#f97316', fontSize: 10, letterSpacing: '0.25em', margin: '0 0 8px' }}>── NOTA</p>
               <p style={{ color: '#c88848', fontSize: 12, margin: 0, lineHeight: 1.6 }}>
                 Ya Voy! está en desarrollo activo. Conecta las 3 sub-apps para activar métricas reales.
               </p>
@@ -416,11 +439,9 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme 
         position: 'relative', zIndex: 1, borderTop: '1px solid #0a0a14',
         padding: '16px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
-        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>Â© 2026 BATALLAGROUP â€” TODOS LOS DERECHOS RESERVADOS</span>
+        <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>© 2026 BATALLAGROUP — TODOS LOS DERECHOS RESERVADOS</span>
         <span style={{ color: '#3a3a5c', fontSize: 10, letterSpacing: '0.2em' }}>V 1.4.0 · PROD</span>
       </footer>
     </div>
   );
 }
-
-
