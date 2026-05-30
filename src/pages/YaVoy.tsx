@@ -3,7 +3,7 @@ import type { Theme } from "../App";
 import { neon } from "@neondatabase/serverless";
 
 interface Props { onBack: () => void; theme: Theme }
-type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | "bloqueos" | null;
+type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | "bloqueos" | "retiros" | null;
 
 interface Solicitud {
   id: string;
@@ -24,6 +24,7 @@ const SUBAPPS = [
   { id: "config",      name: "Configuracion",        icon: "⚙️",  desc: "Email, WhatsApp y URLs del sistema" },
   { id: "soporte",     name: "Soporte",               icon: "🎧",  desc: "Reportes de usuarios — ayuda y problemas" },
   { id: "bloqueos",    name: "Cuentas Bloqueadas",    icon: "🔒",  desc: "Bloqueo y desbloqueo de usuarios, repartidores y restaurantes" },
+  { id: "retiros",     name: "Retiros",                icon: "💸",  desc: "Solicitudes de retiro de ganancias — restaurantes y repartidores" },
 ];
 
 const STATUS_COLOR: Record<string, string> = { pendiente: "#f59e0b", aprobado: "#22c55e", rechazado: "#ef4444" };
@@ -737,6 +738,129 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     </div>
   );
 }
+// ─── RETIROS ──────────────────────────────────────────────────────────────────
+function RetirosAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
+  const _API = "https://ya-voy-api.onrender.com";
+  const [retiros, setRetiros] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [procesando, setProc] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState("todos");
+  const [notas, setNotas] = useState<Record<string, string>>({});
+  const [expandido, setExp] = useState<string | null>(null);
+
+  const cargar = async () => {
+    setLoading(true); setError("");
+    try {
+      const data = await fetch(`${_API}/api/retiros`).then(r => r.json());
+      setRetiros(data);
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { cargar(); const iv = setInterval(cargar, 15000); return () => clearInterval(iv); }, []);
+
+  const actualizar = async (id: string, status: string) => {
+    setProc(id);
+    try {
+      await fetch(`${_API}/api/retiros/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, nota_admin: notas[id] || "" }),
+      });
+      await cargar();
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setProc(null); }
+  };
+
+  const STATUS_COLOR: Record<string, string> = { pendiente: "#f59e0b", aprobado: "#3b82f6", pagado: "#22c55e", rechazado: "#ef4444" };
+  const STATUS_LABEL: Record<string, string> = { pendiente: "Pendiente", aprobado: "Aprobado", pagado: "Pagado", rechazado: "Rechazado" };
+  const btn = (c: string) => ({ background: `${c}15`, border: `1px solid ${c}40`, borderRadius: 8, color: c, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 as const });
+  const card = { background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 10 };
+
+  const filtrados = retiros.filter(r => filtro === "todos" || r.status === filtro);
+  const counts = {
+    todos: retiros.length,
+    pendiente: retiros.filter(r => r.status === "pendiente").length,
+    aprobado: retiros.filter(r => r.status === "aprobado").length,
+    pagado: retiros.filter(r => r.status === "pagado").length,
+    rechazado: retiros.filter(r => r.status === "rechazado").length,
+  };
+  const totalPendiente = retiros.filter(r => r.status === "pendiente").reduce((a, r) => a + Number(r.monto), 0);
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
+      <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "14px 28px", display: "flex", alignItems: "center", gap: 16, position: "sticky" as const, top: 0, zIndex: 100 }}>
+        <button onClick={onBack} style={btn(theme.textMuted)}>← Volver</button>
+        <div>
+          <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>💸 Retiros</h1>
+          <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>SOLICITUDES DE PAGO</p>
+        </div>
+        {counts.pendiente > 0 && (
+          <span style={{ marginLeft: 8, background: "#f59e0b20", border: "1px solid #f59e0b40", borderRadius: 20, color: "#f59e0b", padding: "3px 12px", fontSize: 11, fontWeight: 900 }}>
+            {counts.pendiente} pendiente{counts.pendiente !== 1 ? "s" : ""} · MXN ${totalPendiente.toFixed(2)}
+          </span>
+        )}
+      </div>
+
+      <div style={{ padding: "24px 28px", maxWidth: 900, margin: "0 auto" }}>
+        {error && <p style={{ color: "#ef4444", background: "#ef444420", border: "1px solid #ef444440", borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13 }}>{error}</p>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 24 }}>
+          {(["todos","pendiente","aprobado","pagado","rechazado"] as const).map(t => {
+            const color = t === "todos" ? "#64748b" : STATUS_COLOR[t];
+            return (
+              <div key={t} onClick={() => setFiltro(t)} style={{ ...card, borderLeft: `3px solid ${color}`, marginBottom: 0, cursor: "pointer", opacity: filtro === t ? 1 : 0.5 }}>
+                <p style={{ color: theme.textDim, fontSize: 9, letterSpacing: "0.15em", margin: "0 0 4px" }}>{t.toUpperCase()}</p>
+                <p style={{ color, fontSize: 22, fontWeight: 900, margin: 0 }}>{counts[t as keyof typeof counts]}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {loading ? <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Cargando...</p>
+        : filtrados.length === 0 ? <div style={{ textAlign: "center", padding: "60px 0", color: theme.textDim }}><p style={{ fontSize: 36 }}>💸</p><p>Sin solicitudes {filtro !== "todos" ? filtro : ""}</p></div>
+        : filtrados.map(r => (
+          <div key={r.id} style={{ ...card, borderLeft: `3px solid ${STATUS_COLOR[r.status] || "#64748b"}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, cursor: "pointer" }} onClick={() => setExp(expandido === r.id ? null : r.id)}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const, marginBottom: 4 }}>
+                  <span style={{ fontSize: 16 }}>{r.tipo_actor === "repartidor" ? "🛵" : "🍽️"}</span>
+                  <span style={{ color: theme.text, fontSize: 14, fontWeight: 900 }}>{r.actor_nombre || r.actor_id}</span>
+                  <span style={{ background: `${STATUS_COLOR[r.status]}20`, border: `1px solid ${STATUS_COLOR[r.status]}40`, borderRadius: 20, color: STATUS_COLOR[r.status], padding: "2px 10px", fontSize: 10, fontWeight: 700 }}>{STATUS_LABEL[r.status]}</span>
+                  <span style={{ background: "#8b5cf620", border: "1px solid #8b5cf640", borderRadius: 20, color: "#8b5cf6", padding: "2px 10px", fontSize: 10, fontWeight: 700 }}>{r.tipo_actor}</span>
+                </div>
+                <p style={{ color: "#22c55e", fontSize: 18, fontWeight: 900, margin: "0 0 2px" }}>MXN ${Number(r.monto).toFixed(2)}</p>
+                <p style={{ color: theme.textDim, fontSize: 11, margin: 0 }}>{new Date(r.fecha_solicitud).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                {r.nota_admin && <p style={{ color: "#3b82f6", fontSize: 11, margin: "4px 0 0" }}>Nota: {r.nota_admin}</p>}
+              </div>
+              <span style={{ color: theme.textDim, fontSize: 11 }}>{expandido === r.id ? "▲" : "▼"}</span>
+            </div>
+
+            {expandido === r.id && r.status === "pendiente" && (
+              <div style={{ marginTop: 14, borderTop: `1px solid ${theme.border}`, paddingTop: 14 }}>
+                <textarea value={notas[r.id] || ""} onChange={e => setNotas(p => ({ ...p, [r.id]: e.target.value }))}
+                  placeholder="Nota interna (opcional)..."
+                  style={{ width: "100%", minHeight: 60, background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "10px 12px", fontSize: 12, outline: "none", boxSizing: "border-box" as const, resize: "vertical" as const, marginBottom: 10 }} />
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+                  <button onClick={() => actualizar(r.id, "aprobado")} disabled={procesando === r.id} style={{ ...btn("#3b82f6"), opacity: procesando === r.id ? 0.5 : 1 }}>✔ Aprobar</button>
+                  <button onClick={() => actualizar(r.id, "pagado")} disabled={procesando === r.id} style={{ ...btn("#22c55e"), opacity: procesando === r.id ? 0.5 : 1 }}>💸 Marcar pagado</button>
+                  <button onClick={() => actualizar(r.id, "rechazado")} disabled={procesando === r.id} style={{ ...btn("#ef4444"), opacity: procesando === r.id ? 0.5 : 1 }}>✕ Rechazar</button>
+                </div>
+              </div>
+            )}
+            {expandido === r.id && r.status === "aprobado" && (
+              <div style={{ marginTop: 14, borderTop: `1px solid ${theme.border}`, paddingTop: 14 }}>
+                <button onClick={() => actualizar(r.id, "pagado")} disabled={procesando === r.id} style={{ ...btn("#22c55e"), opacity: procesando === r.id ? 0.5 : 1 }}>💸 Confirmar pago realizado</button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── BLOQUEOS ─────────────────────────────────────────────────────────────────
 function BloqueosAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const _API = "https://ya-voy-api.onrender.com";
@@ -946,6 +1070,7 @@ export default function YaVoy({ onBack, theme }: Props) {
   if (sub === "cliente")      return <ClienteAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub === "soporte")      return <SoporteAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub === "bloqueos")     return <BloqueosAdmin     onBack={() => setSub(null)} theme={theme} />;
+  if (sub === "retiros")      return <RetirosAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub) {
     const app = SUBAPPS.find(a => a.id === sub)!;
     return (
