@@ -3,7 +3,7 @@ import type { Theme } from "../App";
 import { neon } from "@neondatabase/serverless";
 
 interface Props { onBack: () => void; theme: Theme }
-type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | "bloqueos" | "retiros" | "fondo" | null;
+type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | "bloqueos" | "retiros" | "fondo" | "contingencias" | null;
 
 interface Solicitud {
   id: string;
@@ -26,6 +26,7 @@ const SUBAPPS = [
   { id: "bloqueos",    name: "Cuentas Bloqueadas",    icon: "🔒",  desc: "Bloqueo y desbloqueo de usuarios, repartidores y restaurantes" },
   { id: "retiros",     name: "Retiros",                icon: "💸",  desc: "Solicitudes de retiro de ganancias — restaurantes y repartidores" },
   { id: "fondo",       name: "Fondo de Recuperación",  icon: "🛡️",  desc: "15% de comisiones reservado para emergencias y contingencias" },
+  { id: "contingencias", name: "Contingencias",           icon: "🚨",  desc: "No pagos, accidentes y cancelaciones automaticas" },
 ];
 
 const STATUS_COLOR: Record<string, string> = { pendiente: "#f59e0b", aprobado: "#22c55e", rechazado: "#ef4444" };
@@ -739,6 +740,102 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     </div>
   );
 }
+// ─── CONTINGENCIAS ───────────────────────────────────────────────────────────
+function ContingenciasAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
+  const _API = "https://ya-voy-api.onrender.com";
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [filtro, setFiltro] = useState("todos");
+  const [procesando, setProc] = useState<string | null>(null);
+  const [notas, setNotas] = useState<Record<string, string>>({});
+  const [expandido, setExp] = useState<string | null>(null);
+
+  const cargar = async () => {
+    setLoading(true); setError("");
+    try {
+      const data = await fetch(`${_API}/api/contingencias`).then(r => r.json());
+      setItems(data);
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { cargar(); const iv = setInterval(cargar, 15000); return () => clearInterval(iv); }, []);
+
+  const resolver = async (id: string) => {
+    setProc(id);
+    try {
+      await fetch(`${_API}/api/contingencias/${id}/resolver`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nota_admin: notas[id] || "" }),
+      });
+      await cargar();
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setProc(null); }
+  };
+
+  const TIPO_LABEL: Record<string, string> = { no_pago: "⚠️ No pagó", accidente: "🚨 Accidente" };
+  const TIPO_COLOR: Record<string, string> = { no_pago: "#f59e0b", accidente: "#ef4444" };
+  const btn = (c: string) => ({ background: `${c}15`, border: `1px solid ${c}40`, borderRadius: 8, color: c, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 as const });
+  const card = { background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 10 };
+
+  const filtrados = items.filter(i => filtro === "todos" || i.status === filtro || i.tipo === filtro);
+  const counts = { todos: items.length, pendiente: items.filter(i => i.status === "pendiente").length, resuelto: items.filter(i => i.status === "resuelto").length };
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
+      <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "14px 28px", display: "flex", alignItems: "center", gap: 16, position: "sticky" as const, top: 0, zIndex: 100 }}>
+        <button onClick={onBack} style={btn(theme.textMuted)}>← Volver</button>
+        <div>
+          <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>🚨 Contingencias</h1>
+          <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>NO PAGO · ACCIDENTES · INCIDENTES</p>
+        </div>
+        {counts.pendiente > 0 && <span style={{ marginLeft: 8, background: "#ef444420", border: "1px solid #ef444440", borderRadius: 20, color: "#ef4444", padding: "3px 12px", fontSize: 11, fontWeight: 900 }}>{counts.pendiente} pendiente{counts.pendiente !== 1 ? "s" : ""}</span>}
+      </div>
+      <div style={{ padding: "24px 28px", maxWidth: 900, margin: "0 auto" }}>
+        {error && <p style={{ color: "#ef4444", background: "#ef444420", border: "1px solid #ef444440", borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13 }}>{error}</p>}
+        <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" as const }}>
+          {["todos","pendiente","resuelto","no_pago","accidente"].map(t => (
+            <button key={t} onClick={() => setFiltro(t)} style={{ ...btn(filtro === t ? "#ef4444" : theme.textMuted), background: filtro === t ? "#ef444420" : theme.surface }}>
+              {t === "no_pago" ? "⚠️ No pagó" : t === "accidente" ? "🚨 Accidentes" : t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === "pendiente" && counts.pendiente > 0 ? ` (${counts.pendiente})` : t === "todos" ? ` (${counts.todos})` : ""}
+            </button>
+          ))}
+        </div>
+        {loading ? <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Cargando...</p>
+        : filtrados.length === 0 ? <div style={{ textAlign: "center", padding: "60px 0", color: theme.textDim }}><p style={{ fontSize: 36 }}>✅</p><p>Sin contingencias {filtro !== "todos" ? filtro : ""}</p></div>
+        : filtrados.map(c => (
+          <div key={c.id} style={{ ...card, borderLeft: `3px solid ${TIPO_COLOR[c.tipo] || "#64748b"}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, cursor: "pointer" }} onClick={() => setExp(expandido === c.id ? null : c.id)}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" as const, marginBottom: 4 }}>
+                  <span style={{ color: theme.text, fontSize: 14, fontWeight: 900 }}>{TIPO_LABEL[c.tipo] || c.tipo}</span>
+                  <span style={{ background: c.status === "resuelto" ? "#22c55e20" : "#f59e0b20", border: `1px solid ${c.status === "resuelto" ? "#22c55e40" : "#f59e0b40"}`, borderRadius: 20, color: c.status === "resuelto" ? "#22c55e" : "#f59e0b", padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{c.status}</span>
+                  {c.monto_fondo > 0 && <span style={{ background: "#ef444420", border: "1px solid #ef444440", borderRadius: 20, color: "#ef4444", padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>Fondo: -MXN ${Number(c.monto_fondo).toFixed(2)}</span>}
+                </div>
+                {c.descripcion && <p style={{ color: theme.textMuted, fontSize: 12, margin: "0 0 2px", fontStyle: "italic" }}>"{c.descripcion}"</p>}
+                <p style={{ color: theme.textDim, fontSize: 11, margin: 0 }}>Pedido: {c.pedido_id?.slice(0,8)}... · {new Date(c.creado_en).toLocaleDateString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+              </div>
+              <span style={{ color: theme.textDim, fontSize: 11 }}>{expandido === c.id ? "▲" : "▼"}</span>
+            </div>
+            {expandido === c.id && c.status === "pendiente" && (
+              <div style={{ marginTop: 14, borderTop: `1px solid ${theme.border}`, paddingTop: 14 }}>
+                {c.foto_url && <a href={c.foto_url} target="_blank" rel="noreferrer" style={{ display: "inline-block", marginBottom: 10 }}><img src={c.foto_url} style={{ height: 120, borderRadius: 10, border: `1px solid ${theme.border}` }} /></a>}
+                <textarea value={notas[c.id] || ""} onChange={e => setNotas(p => ({ ...p, [c.id]: e.target.value }))}
+                  placeholder="Nota interna (opcional)..."
+                  style={{ width: "100%", minHeight: 60, background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "10px 12px", fontSize: 12, outline: "none", boxSizing: "border-box" as const, resize: "vertical" as const, marginBottom: 10 }} />
+                <button onClick={() => resolver(c.id)} disabled={procesando === c.id} style={{ ...btn("#22c55e"), opacity: procesando === c.id ? 0.5 : 1 }}>
+                  {procesando === c.id ? "..." : "✔ Marcar resuelto"}
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── FONDO ────────────────────────────────────────────────────────────────────
 function FondoAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const _API = "https://ya-voy-api.onrender.com";
@@ -1206,6 +1303,7 @@ export default function YaVoy({ onBack, theme }: Props) {
   if (sub === "bloqueos")     return <BloqueosAdmin     onBack={() => setSub(null)} theme={theme} />;
   if (sub === "retiros")      return <RetirosAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub === "fondo")        return <FondoAdmin        onBack={() => setSub(null)} theme={theme} />;
+  if (sub === "contingencias") return <ContingenciasAdmin onBack={() => setSub(null)} theme={theme} />;
   if (sub) {
     const app = SUBAPPS.find(a => a.id === sub)!;
     return (
