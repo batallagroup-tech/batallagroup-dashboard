@@ -3,7 +3,7 @@ import type { Theme } from "../App";
 import { neon } from "@neondatabase/serverless";
 
 interface Props { onBack: () => void; theme: Theme }
-type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | "bloqueos" | "retiros" | null;
+type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | "bloqueos" | "retiros" | "fondo" | null;
 
 interface Solicitud {
   id: string;
@@ -25,6 +25,7 @@ const SUBAPPS = [
   { id: "soporte",     name: "Soporte",               icon: "🎧",  desc: "Reportes de usuarios — ayuda y problemas" },
   { id: "bloqueos",    name: "Cuentas Bloqueadas",    icon: "🔒",  desc: "Bloqueo y desbloqueo de usuarios, repartidores y restaurantes" },
   { id: "retiros",     name: "Retiros",                icon: "💸",  desc: "Solicitudes de retiro de ganancias — restaurantes y repartidores" },
+  { id: "fondo",       name: "Fondo de Recuperación",  icon: "🛡️",  desc: "15% de comisiones reservado para emergencias y contingencias" },
 ];
 
 const STATUS_COLOR: Record<string, string> = { pendiente: "#f59e0b", aprobado: "#22c55e", rechazado: "#ef4444" };
@@ -738,6 +739,139 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     </div>
   );
 }
+// ─── FONDO ────────────────────────────────────────────────────────────────────
+function FondoAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
+  const _API = "https://ya-voy-api.onrender.com";
+  const [resumen, setResumen] = useState<any>(null);
+  const [log, setLog] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [montoUso, setMontoUso] = useState("");
+  const [descUso, setDescUso] = useState("");
+  const [guardando, setGuardando] = useState(false);
+  const [tab, setTab] = useState<"resumen" | "log">("resumen");
+
+  const cargar = async () => {
+    setLoading(true); setError("");
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch(`${_API}/api/fondo/resumen`).then(r => r.json()),
+        fetch(`${_API}/api/fondo/log`).then(r => r.json()),
+      ]);
+      setResumen(r1); setLog(r2);
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { cargar(); }, []);
+
+  const registrarUso = async () => {
+    const monto = parseFloat(montoUso);
+    if (!monto || monto <= 0 || !descUso.trim()) return;
+    if (resumen && monto > resumen.fondoDisponible) { setError("Monto excede el fondo disponible"); return; }
+    setGuardando(true); setError("");
+    try {
+      await fetch(`${_API}/api/fondo/uso`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monto, descripcion: descUso }),
+      });
+      setMontoUso(""); setDescUso(""); await cargar();
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setGuardando(false); }
+  };
+
+  const btn = (c: string) => ({ background: `${c}15`, border: `1px solid ${c}40`, borderRadius: 8, color: c, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 as const });
+  const card = { background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px", marginBottom: 12 };
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
+      <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "14px 28px", display: "flex", alignItems: "center", gap: 16, position: "sticky" as const, top: 0, zIndex: 100 }}>
+        <button onClick={onBack} style={btn(theme.textMuted)}>← Volver</button>
+        <div>
+          <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>🛡️ Fondo de Recuperación</h1>
+          <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>15% DE COMISIONES · USO EXCLUSIVO BATALLA GROUP</p>
+        </div>
+      </div>
+
+      <div style={{ padding: "24px 28px", maxWidth: 800, margin: "0 auto" }}>
+        {error && <p style={{ color: "#ef4444", background: "#ef444420", border: "1px solid #ef444440", borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13 }}>{error}</p>}
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+          {(["resumen", "log"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{ ...btn(tab === t ? "#8b5cf6" : theme.textMuted), background: tab === t ? "#8b5cf620" : theme.surface }}>
+              {t === "resumen" ? "📊 Resumen" : "📋 Historial"}
+            </button>
+          ))}
+        </div>
+
+        {loading ? <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Cargando...</p> : tab === "resumen" && resumen ? (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, marginBottom: 24 }}>
+              <div style={{ ...card, borderLeft: "3px solid #22c55e" }}>
+                <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>GANANCIAS NETAS BATALLA GROUP</p>
+                <p style={{ color: "#22c55e", fontSize: 28, fontWeight: 900, margin: 0 }}>MXN ${Number(resumen.gananciasNetas).toFixed(2)}</p>
+                <p style={{ color: theme.textDim, fontSize: 11, margin: "4px 0 0" }}>85% de comisiones acumuladas</p>
+              </div>
+              <div style={{ ...card, borderLeft: "3px solid #8b5cf6" }}>
+                <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>FONDO DISPONIBLE</p>
+                <p style={{ color: "#8b5cf6", fontSize: 28, fontWeight: 900, margin: 0 }}>MXN ${Number(resumen.fondoDisponible).toFixed(2)}</p>
+                <p style={{ color: theme.textDim, fontSize: 11, margin: "4px 0 0" }}>Acumulado: ${Number(resumen.fondoAcumulado).toFixed(2)} · Usado: ${Number(resumen.fondoUsado).toFixed(2)}</p>
+              </div>
+              <div style={{ ...card, borderLeft: "3px solid #3b82f6" }}>
+                <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>TOTAL COMISIONES (12%)</p>
+                <p style={{ color: "#3b82f6", fontSize: 22, fontWeight: 900, margin: 0 }}>MXN ${Number(resumen.totalComision).toFixed(2)}</p>
+              </div>
+              <div style={{ ...card, borderLeft: "3px solid #ef4444" }}>
+                <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>FONDO USADO</p>
+                <p style={{ color: "#ef4444", fontSize: 22, fontWeight: 900, margin: 0 }}>MXN ${Number(resumen.fondoUsado).toFixed(2)}</p>
+              </div>
+            </div>
+
+            <div style={{ ...card, borderLeft: "3px solid #f59e0b" }}>
+              <p style={{ color: theme.text, fontSize: 14, fontWeight: 900, margin: "0 0 14px" }}>💸 Registrar uso del fondo</p>
+              <div style={{ display: "flex", gap: 10, marginBottom: 10, flexWrap: "wrap" as const }}>
+                <input type="number" value={montoUso} onChange={e => setMontoUso(e.target.value)}
+                  placeholder="Monto MXN" min="1" max={resumen.fondoDisponible}
+                  style={{ flex: "0 0 140px", background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "10px 14px", fontSize: 13, outline: "none" }} />
+                <input value={descUso} onChange={e => setDescUso(e.target.value)}
+                  placeholder="Descripción (ej: Reembolso cliente #123)..."
+                  style={{ flex: 1, background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "10px 14px", fontSize: 13, outline: "none", minWidth: 200 }} />
+              </div>
+              <button onClick={registrarUso} disabled={guardando || !montoUso || !descUso.trim()}
+                style={{ ...btn("#f59e0b"), opacity: guardando || !montoUso || !descUso.trim() ? 0.4 : 1 }}>
+                {guardando ? "Registrando..." : "Registrar uso"}
+              </button>
+              <p style={{ color: theme.textDim, fontSize: 11, margin: "10px 0 0" }}>⚠️ Solo Ramses puede usar este fondo. Cada uso queda registrado.</p>
+            </div>
+          </>
+        ) : tab === "log" ? (
+          <>
+            {log.length === 0 && <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Sin movimientos</p>}
+            {log.map(m => (
+              <div key={m.id} style={{ ...card, borderLeft: `3px solid ${m.tipo === "ingreso" ? "#22c55e" : "#ef4444"}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: 8 }}>
+                  <div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ fontSize: 16 }}>{m.tipo === "ingreso" ? "⬆️" : "⬇️"}</span>
+                      <span style={{ color: theme.text, fontSize: 13, fontWeight: 900 }}>{m.descripcion || (m.tipo === "ingreso" ? "Ingreso" : "Uso")}</span>
+                      <span style={{ background: m.tipo === "ingreso" ? "#22c55e20" : "#ef444420", border: `1px solid ${m.tipo === "ingreso" ? "#22c55e40" : "#ef444440"}`, borderRadius: 20, color: m.tipo === "ingreso" ? "#22c55e" : "#ef4444", padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>{m.tipo.toUpperCase()}</span>
+                    </div>
+                    <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>{new Date(m.creado_en).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                  </div>
+                  <span style={{ color: m.tipo === "ingreso" ? "#22c55e" : "#ef4444", fontSize: 18, fontWeight: 900 }}>
+                    {m.tipo === "ingreso" ? "+" : "-"}MXN ${Number(m.monto).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 // ─── RETIROS ──────────────────────────────────────────────────────────────────
 function RetirosAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const _API = "https://ya-voy-api.onrender.com";
@@ -1071,6 +1205,7 @@ export default function YaVoy({ onBack, theme }: Props) {
   if (sub === "soporte")      return <SoporteAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub === "bloqueos")     return <BloqueosAdmin     onBack={() => setSub(null)} theme={theme} />;
   if (sub === "retiros")      return <RetirosAdmin      onBack={() => setSub(null)} theme={theme} />;
+  if (sub === "fondo")        return <FondoAdmin        onBack={() => setSub(null)} theme={theme} />;
   if (sub) {
     const app = SUBAPPS.find(a => a.id === sub)!;
     return (
