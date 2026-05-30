@@ -3,7 +3,7 @@ import type { Theme } from "../App";
 import { neon } from "@neondatabase/serverless";
 
 interface Props { onBack: () => void; theme: Theme }
-type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | null;
+type SubApp = "restaurante" | "repartidor" | "cliente" | "config" | "soporte" | "bloqueos" | null;
 
 interface Solicitud {
   id: string;
@@ -23,6 +23,7 @@ const SUBAPPS = [
   { id: "cliente",     name: "Ya Voy Cliente",      icon: "📱", desc: "App para pedir comida a domicilio" },
   { id: "config",      name: "Configuracion",        icon: "⚙️",  desc: "Email, WhatsApp y URLs del sistema" },
   { id: "soporte",     name: "Soporte",               icon: "🎧",  desc: "Reportes de usuarios — ayuda y problemas" },
+  { id: "bloqueos",    name: "Cuentas Bloqueadas",    icon: "🔒",  desc: "Bloqueo y desbloqueo de usuarios, repartidores y restaurantes" },
 ];
 
 const STATUS_COLOR: Record<string, string> = { pendiente: "#f59e0b", aprobado: "#22c55e", rechazado: "#ef4444" };
@@ -736,6 +737,206 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     </div>
   );
 }
+// ─── BLOQUEOS ─────────────────────────────────────────────────────────────────
+function BloqueosAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
+  const _API = "https://ya-voy-api.onrender.com";
+  const [data, setData] = useState<{ usuarios: any[]; repartidores: any[]; negocios: any[] }>({ usuarios: [], repartidores: [], negocios: [] });
+  const [historial, setHistorial] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [procesando, setProc] = useState<string | null>(null);
+  const [tab, setTab] = useState<"activos" | "historial">("activos");
+  const [notaDesbloqueo, setNota] = useState<Record<string, string>>({});
+  const [modalBloqueo, setModalBloqueo] = useState<{ tipo: string; actorId: string; nombre: string } | null>(null);
+  const [razonBloqueo, setRazon] = useState("");
+
+  const cargar = async () => {
+    setLoading(true); setError("");
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch(`${_API}/api/bloqueos`).then(r => r.json()),
+        fetch(`${_API}/api/bloqueos/historial`).then(r => r.json()),
+      ]);
+      setData(r1); setHistorial(r2);
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { cargar(); const iv = setInterval(cargar, 15000); return () => clearInterval(iv); }, []);
+
+  const desbloquear = async (tipo: string, actorId: string) => {
+    setProc(actorId);
+    try {
+      await fetch(`${_API}/api/bloqueos`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo, actorId, nota: notaDesbloqueo[actorId] || "" }),
+      });
+      await cargar();
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setProc(null); }
+  };
+
+  const bloquear = async () => {
+    if (!modalBloqueo || !razonBloqueo.trim()) return;
+    setProc(modalBloqueo.actorId);
+    try {
+      await fetch(`${_API}/api/bloqueos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: modalBloqueo.tipo, actorId: modalBloqueo.actorId, razon: razonBloqueo }),
+      });
+      setModalBloqueo(null); setRazon(""); await cargar();
+    } catch (e: any) { setError("Error: " + e.message); }
+    finally { setProc(null); }
+  };
+
+  const btn = (c: string) => ({ background: `${c}15`, border: `1px solid ${c}40`, borderRadius: 8, color: c, padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 as const });
+  const card = { background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "16px 20px", marginBottom: 10 };
+  const total = data.usuarios.length + data.repartidores.length + data.negocios.length;
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
+      <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "14px 28px", display: "flex", alignItems: "center", gap: 16, position: "sticky" as const, top: 0, zIndex: 100 }}>
+        <button onClick={onBack} style={btn(theme.textMuted)}>← Volver</button>
+        <div>
+          <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>🔒 Cuentas Bloqueadas</h1>
+          <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>CONTROL DE ACCESO · YA VOY</p>
+        </div>
+        {total > 0 && <span style={{ marginLeft: 8, background: "#ef444420", border: "1px solid #ef444440", borderRadius: 20, color: "#ef4444", padding: "3px 12px", fontSize: 11, fontWeight: 900 }}>{total} bloqueado{total !== 1 ? "s" : ""}</span>}
+      </div>
+
+      <div style={{ padding: "24px 28px", maxWidth: 900, margin: "0 auto" }}>
+        {error && <p style={{ color: "#ef4444", background: "#ef444420", border: "1px solid #ef444440", borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13 }}>{error}</p>}
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+          {(["activos", "historial"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{ ...btn(tab === t ? "#ef4444" : theme.textMuted), background: tab === t ? "#ef444420" : theme.surface }}>
+              {t === "activos" ? "🔒 Bloqueados activos" : "📋 Historial"}
+            </button>
+          ))}
+        </div>
+
+        {loading ? <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Cargando...</p> : tab === "activos" ? (
+          <>
+            {total === 0 && <div style={{ textAlign: "center", padding: "60px 0", color: theme.textDim }}><p style={{ fontSize: 36 }}>✅</p><p>Sin cuentas bloqueadas</p></div>}
+
+            {data.usuarios.length > 0 && (
+              <>
+                <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", margin: "0 0 10px" }}>CLIENTES ({data.usuarios.length})</p>
+                {data.usuarios.map(u => (
+                  <div key={u.id} style={card}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ color: theme.text, fontSize: 14, fontWeight: 900, margin: "0 0 2px" }}>👤 {u.nombre || "Sin nombre"}</p>
+                        <p style={{ color: theme.textMuted, fontSize: 12, margin: "0 0 2px" }}>{u.email}</p>
+                        {u.razon_bloqueo && <p style={{ color: "#ef4444", fontSize: 11, margin: "0 0 4px" }}>Razón: {u.razon_bloqueo}</p>}
+                        {u.bloqueado_en && <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>Bloqueado: {new Date(u.bloqueado_en).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6, minWidth: 160 }}>
+                        <input value={notaDesbloqueo[u.id] || ""} onChange={e => setNota(p => ({ ...p, [u.id]: e.target.value }))}
+                          placeholder="Nota (opcional)..." style={{ background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 7, color: theme.text, padding: "6px 10px", fontSize: 11, outline: "none" }} />
+                        <button onClick={() => desbloquear("usuario", u.id)} disabled={procesando === u.id} style={{ ...btn("#22c55e"), opacity: procesando === u.id ? 0.5 : 1 }}>
+                          {procesando === u.id ? "..." : "✔ Desbloquear"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {data.repartidores.length > 0 && (
+              <>
+                <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", margin: "16px 0 10px" }}>REPARTIDORES ({data.repartidores.length})</p>
+                {data.repartidores.map(r => (
+                  <div key={r.id} style={card}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ color: theme.text, fontSize: 14, fontWeight: 900, margin: "0 0 2px" }}>🛵 {r.nombre || "Sin nombre"}</p>
+                        <p style={{ color: theme.textMuted, fontSize: 12, margin: "0 0 2px" }}>{r.email}</p>
+                        {r.razon_bloqueo && <p style={{ color: "#ef4444", fontSize: 11, margin: 0 }}>Razón: {r.razon_bloqueo}</p>}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6, minWidth: 160 }}>
+                        <input value={notaDesbloqueo[r.id] || ""} onChange={e => setNota(p => ({ ...p, [r.id]: e.target.value }))}
+                          placeholder="Nota (opcional)..." style={{ background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 7, color: theme.text, padding: "6px 10px", fontSize: 11, outline: "none" }} />
+                        <button onClick={() => desbloquear("repartidor", r.id)} disabled={procesando === r.id} style={{ ...btn("#22c55e"), opacity: procesando === r.id ? 0.5 : 1 }}>
+                          {procesando === r.id ? "..." : "✔ Desbloquear"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
+            {data.negocios.length > 0 && (
+              <>
+                <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", margin: "16px 0 10px" }}>RESTAURANTES ({data.negocios.length})</p>
+                {data.negocios.map(n => (
+                  <div key={n.id} style={card}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ color: theme.text, fontSize: 14, fontWeight: 900, margin: "0 0 2px" }}>🍽️ {n.nombre}</p>
+                        <p style={{ color: theme.textMuted, fontSize: 12, margin: "0 0 2px" }}>{n.direccion}</p>
+                        {n.razon_bloqueo && <p style={{ color: "#ef4444", fontSize: 11, margin: 0 }}>Razón: {n.razon_bloqueo}</p>}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6, minWidth: 160 }}>
+                        <input value={notaDesbloqueo[n.id] || ""} onChange={e => setNota(p => ({ ...p, [n.id]: e.target.value }))}
+                          placeholder="Nota (opcional)..." style={{ background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 7, color: theme.text, padding: "6px 10px", fontSize: 11, outline: "none" }} />
+                        <button onClick={() => desbloquear("negocio", n.id)} disabled={procesando === n.id} style={{ ...btn("#22c55e"), opacity: procesando === n.id ? 0.5 : 1 }}>
+                          {procesando === n.id ? "..." : "✔ Desbloquear"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            {historial.length === 0 && <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Sin historial</p>}
+            {historial.map(h => (
+              <div key={h.id} style={{ ...card, borderLeft: `3px solid ${h.resuelto ? "#22c55e" : "#ef4444"}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap" as const, gap: 8 }}>
+                  <div>
+                    <p style={{ color: theme.text, fontSize: 13, fontWeight: 900, margin: "0 0 2px" }}>
+                      {h.tipo_usuario === "usuario" ? "👤" : h.tipo_usuario === "repartidor" ? "🛵" : "🍽️"} {h.tipo_usuario} — <span style={{ color: theme.textMuted, fontWeight: 400, fontSize: 11 }}>{h.actor_id}</span>
+                    </p>
+                    {h.razon && <p style={{ color: "#ef4444", fontSize: 11, margin: "0 0 2px" }}>Razón: {h.razon}</p>}
+                    {h.nota_desbloqueo && <p style={{ color: "#22c55e", fontSize: 11, margin: "0 0 2px" }}>Nota desbloqueo: {h.nota_desbloqueo}</p>}
+                    <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>{new Date(h.fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                  </div>
+                  <span style={{ background: h.resuelto ? "#22c55e20" : "#ef444420", border: `1px solid ${h.resuelto ? "#22c55e40" : "#ef444440"}`, borderRadius: 20, color: h.resuelto ? "#22c55e" : "#ef4444", padding: "3px 12px", fontSize: 10, fontWeight: 700 }}>
+                    {h.resuelto ? "Desbloqueado" : "Bloqueado"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+
+      {/* Modal bloqueo manual */}
+      {modalBloqueo && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: theme.bg2, border: `1px solid ${theme.border}`, borderRadius: 16, padding: 28, maxWidth: 440, width: "100%" }}>
+            <h3 style={{ color: theme.text, fontSize: 16, fontWeight: 900, margin: "0 0 8px" }}>🔒 Bloquear {modalBloqueo.tipo}</h3>
+            <p style={{ color: theme.textMuted, fontSize: 13, margin: "0 0 16px" }}>{modalBloqueo.nombre}</p>
+            <textarea value={razonBloqueo} onChange={e => setRazon(e.target.value)} placeholder="Razón del bloqueo (requerido)..."
+              style={{ width: "100%", minHeight: 80, background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 10, color: theme.text, padding: "12px 14px", fontSize: 13, outline: "none", boxSizing: "border-box" as const, resize: "vertical" as const, marginBottom: 16 }} />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={bloquear} disabled={!razonBloqueo.trim() || !!procesando} style={{ ...btn("#ef4444"), opacity: !razonBloqueo.trim() ? 0.4 : 1, flex: 1 }}>Confirmar bloqueo</button>
+              <button onClick={() => { setModalBloqueo(null); setRazon(""); }} style={{ ...btn(theme.textMuted), flex: 1 }}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export default function YaVoy({ onBack, theme }: Props) {
   const [sub, setSub] = useState<SubApp>(null);
@@ -744,6 +945,7 @@ export default function YaVoy({ onBack, theme }: Props) {
   if (sub === "config")       return <ConfigAdmin       onBack={() => setSub(null)} theme={theme} />;
   if (sub === "cliente")      return <ClienteAdmin      onBack={() => setSub(null)} theme={theme} />;
   if (sub === "soporte")      return <SoporteAdmin      onBack={() => setSub(null)} theme={theme} />;
+  if (sub === "bloqueos")     return <BloqueosAdmin     onBack={() => setSub(null)} theme={theme} />;
   if (sub) {
     const app = SUBAPPS.find(a => a.id === sub)!;
     return (
