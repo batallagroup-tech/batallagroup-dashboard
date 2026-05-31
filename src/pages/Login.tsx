@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import type { Theme } from '../App';
 
-interface Props { onLogin: () => void; theme: Theme; }
+interface Props { onLogin: () => void; theme: Theme; lang: 'es' | 'en'; onLangToggle: () => void; }
 
 export default function Login({ onLogin, theme }: Props) {
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Login({ onLogin, theme }: Props) {
       fontFamily: "'Inter', system-ui, sans-serif",
       overflow: 'hidden',
     }}>
-      {/* Left panel — branding */}
+      {/* Left panel â€” branding */}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -96,14 +96,14 @@ export default function Login({ onLogin, theme }: Props) {
 
           <div style={{ borderLeft: '2px solid rgba(255,255,255,0.12)', paddingLeft: 20 }}>
             <p style={{ color: theme.textMuted, fontSize: 12, margin: 0, lineHeight: 1.8, letterSpacing: '0.05em' }}>
-              Panel de administración<br />
+              Panel de administraciÃ³n<br />
               acceso restringido
             </p>
           </div>
         </div>
       </div>
 
-      {/* Right panel — form */}
+      {/* Right panel â€” form */}
       <div style={{
         width: 480,
         display: 'flex',
@@ -123,7 +123,7 @@ export default function Login({ onLogin, theme }: Props) {
 
         <div style={{ marginBottom: 20 }}>
           <label style={{ color: theme.textMuted, fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
-            CORREO ELECTRÓNICO
+            CORREO ELECTRÃ“NICO
           </label>
           <input
             type="email" value={email}
@@ -145,13 +145,13 @@ export default function Login({ onLogin, theme }: Props) {
 
         <div style={{ marginBottom: 32, position: 'relative' }}>
           <label style={{ color: theme.textMuted, fontSize: 10, letterSpacing: '0.3em', display: 'block', marginBottom: 10 }}>
-            CONTRASEÑA
+            CONTRASEÃ‘A
           </label>
           <input
             type={showPass ? 'text' : 'password'} value={password}
             onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && login()}
-            placeholder="••••••••••••"
+            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
             style={{
               width: '100%', padding: '14px 48px 14px 18px',
               background: theme.surface,
@@ -171,7 +171,7 @@ export default function Login({ onLogin, theme }: Props) {
               color: theme.textMuted, cursor: 'pointer', fontSize: 15,
             }}
           >
-            {showPass ? '🙈' : '👁️'}
+            {showPass ? 'ðŸ™ˆ' : 'ðŸ‘ï¸'}
           </button>
         </div>
 
@@ -215,11 +215,11 @@ export default function Login({ onLogin, theme }: Props) {
             }
           }}
         >
-          {loading ? 'VERIFICANDO...' : 'ENTRAR →'}
+          {loading ? 'VERIFICANDO...' : 'ENTRAR â†’'}
         </button>
 
         <p style={{ color: theme.textDim, fontSize: 11, marginTop: 32, textAlign: 'center', letterSpacing: '0.1em' }}>
-          © 2026 BatallaGroup. Acceso restringido.
+          Â© 2026 BatallaGroup. Acceso restringido.
         </p>
       </div>
     </div>
