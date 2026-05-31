@@ -3,7 +3,7 @@ import type { Theme } from '../App';
 
 interface Props { onLogin: () => void; theme: Theme; lang: 'es' | 'en'; onLangToggle: () => void; }
 
-export default function Login({ onLogin, theme }: Props) {
+export default function Login({ onLogin, theme, lang, onLangToggle }: Props) {
   useEffect(() => {
     document.body.style.background = theme.bg;
     document.body.style.color = theme.text;
@@ -225,3 +225,4 @@ export default function Login({ onLogin, theme }: Props) {
     </div>
   );
 }
+
