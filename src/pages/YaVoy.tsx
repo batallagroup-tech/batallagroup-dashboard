@@ -565,11 +565,11 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     { clave: "soporte_email",    label: "Email de soporte",       icon: "📧", desc: "Correo visible en Ayuda y soporte dentro de la app" },
     { clave: "whatsapp",         label: "WhatsApp",               icon: "💬", desc: "URL completa: https://wa.me/52XXXXXXXXXX" },
     { clave: "privacidad_url",   label: "Politica de Privacidad", icon: "🔒", desc: "URL publica de la politica de privacidad" },
-    { clave: "envio_precio_km",  label: "Precio por km (MXN)",    icon: "🛵", desc: "Costo de envio por kilometro. Actual: $12/km" },
-    { clave: "envio_minimo",     label: "Envio minimo (MXN)",     icon: "📍", desc: "Costo minimo de envio sin importar distancia. Actual: $35" },
-    { clave: "comision_pct",     label: "Comision app (%)",       icon: "💰", desc: "Porcentaje que retiene Batalla Group de cada venta. Actual: 18%" },
-    { clave: "fondo_pct",        label: "Fondo recuperacion (%)", icon: "🛡️", desc: "Porcentaje de la comision destinado al fondo. Actual: 20%" },
-    { clave: "retiro_minimo",    label: "Retiro minimo (MXN)",    icon: "💸", desc: "Monto minimo para solicitar retiro. Actual: $50" },
+    { clave: "envio_precio_km",  label: "Precio por km (MXN)",    icon: "🛵", desc: "Costo de envio por kilometro. Actual: $12/km", numerico: true },
+    { clave: "envio_minimo",     label: "Envio minimo (MXN)",     icon: "📍", desc: "Costo minimo de envio sin importar distancia. Actual: $35", numerico: true },
+    { clave: "comision_pct",     label: "Comision app (%)",       icon: "💰", desc: "Porcentaje que retiene Batalla Group de cada venta. Actual: 18%", numerico: true },
+    { clave: "fondo_pct",        label: "Fondo recuperacion (%)", icon: "🛡️", desc: "Porcentaje de la comision destinado al fondo. Actual: 20%", numerico: true },
+    { clave: "retiro_minimo",    label: "Retiro minimo (MXN)",    icon: "💸", desc: "Monto minimo para solicitar retiro. Actual: $50", numerico: true },
   ];
 
   const cargar = async () => {
@@ -615,7 +615,7 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
           <p style={{ color: theme.textDim, textAlign: "center", paddingTop: 60 }}>Cargando...</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
-            {CAMPOS.map(({ clave, label, icon, desc }) => (
+            {CAMPOS.map(({ clave, label, icon, desc, numerico }) => (
               <div key={clave} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 18 }}>{icon}</span>
@@ -625,6 +625,7 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
                 <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 12px" }}>{desc}</p>
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
+                    type={(numerico as any) ? "number" : "text"}
                     value={config[clave] ?? ""}
                     onChange={e => setConfig(prev => ({ ...prev, [clave]: e.target.value }))}
                     placeholder={`Valor de ${label}...`}
@@ -921,7 +922,7 @@ function FondoAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
                 <p style={{ color: theme.textDim, fontSize: 11, margin: "4px 0 0" }}>Acumulado: ${Number(resumen.fondoAcumulado).toFixed(2)} · Usado: ${Number(resumen.fondoUsado).toFixed(2)}</p>
               </div>
               <div style={{ ...card, borderLeft: "3px solid #3b82f6" }}>
-                <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>TOTAL COMISIONES (12%)</p>
+                <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>TOTAL COMISIONES (18%)</p>
                 <p style={{ color: "#3b82f6", fontSize: 22, fontWeight: 900, margin: 0 }}>MXN ${Number(resumen.totalComision).toFixed(2)}</p>
               </div>
               <div style={{ ...card, borderLeft: "3px solid #ef4444" }}>
