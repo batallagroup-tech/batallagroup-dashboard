@@ -397,11 +397,14 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [eliminando, setEliminando] = useState<string|null>(null)
+  const [repartidoresOnline, setRepsOnline] = useState<any[]>([])
   const [filtroStatus, setFiltroStatus] = useState("todos")
 
   const cargar = async () => {
     setLoading(true); setError("")
     try {
+      const repsOnlineRes = await fetch("https://ya-voy-api.onrender.com/api/repartidor/online").then(r=>r.json()).catch(()=>[])
+      setRepsOnline(Array.isArray(repsOnlineRes) ? repsOnlineRes : [])
       const [statsRes, pedidosRes, usuariosRes] = await Promise.all([
         db().query(`SELECT
           (SELECT COUNT(*) FROM pedidos WHERE creado_en::date = CURRENT_DATE) as pedidos_hoy,
@@ -487,6 +490,18 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
               <div style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
                 <p style={{ color: theme.textDim, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", margin: "0 0 16px" }}>INGRESOS HOY (PEDIDOS ENTREGADOS)</p>
                 <p style={{ color: "#22c55e", fontSize: 32, fontWeight: 900, margin: 0 }}>MXN ${Number(stats.ingresoHoy).toFixed(2)}</p>
+              </div>
+              <div style={{ marginTop: 16, background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
+                <p style={{ color: theme.textDim, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", margin: "0 0 16px" }}>REPARTIDORES ONLINE ({repartidoresOnline.length})</p>
+                {repartidoresOnline.length === 0 ? <p style={{ color: theme.textDim, fontSize: 13 }}>Sin repartidores online</p> : repartidoresOnline.map((r:any) => (
+                  <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${theme.border}` }}>
+                    <div>
+                      <p style={{ color: theme.text, fontSize: 13, fontWeight: 700, margin: "0 0 2px" }}>{r.nombre || "Sin nombre"} {r.vehiculo === "moto" ? "🏍️" : r.vehiculo === "bici" ? "🚲" : "🚗"}</p>
+                      <p style={{ color: theme.textDim, fontSize: 11, margin: 0 }}>Placas: {r.placa || "—"} · Rating: ⭐{Number(r.rating||5).toFixed(1)}</p>
+                    </div>
+                    <span style={{ background: "#22c55e20", border: "1px solid #22c55e40", borderRadius: 20, color: "#22c55e", padding: "3px 12px", fontSize: 10, fontWeight: 700 }}>ONLINE</span>
+                  </div>
+                ))}
               </div>
               <div style={{ marginTop: 16, background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
                 <p style={{ color: theme.textDim, fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", margin: "0 0 16px" }}>ÚLTIMOS 5 PEDIDOS</p>
