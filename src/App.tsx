@@ -32,7 +32,7 @@ const IDLE_MS = 3 * 60 * 1000; // 3 minutos
 
 function Screensaver({ onWake }: { onWake: () => void }) {
   const [pos, setPos] = useState({ x: 30, y: 40 });
-  const [dir, setDir] = useState({ x: 0.4, y: 0.3 });
+  const dirRef = useRef({ x: 0.4, y: 0.3 });
   const rafRef = useRef<number>(0);
   const posRef = useRef({ x: 30, y: 40 });
   const dirRef = useRef({ x: 0.4, y: 0.3 });
@@ -269,3 +269,5 @@ export default function App() {
     </>
   );
 }
+
+
