@@ -210,7 +210,7 @@ export default function Login({ onLogin, theme, dark, onThemeToggle, lang, onLan
               placeholder="••••••••••••" style={{ ...inp, paddingRight: 44 }}
               onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#3b82f6'}
               onBlur={e => (e.target as HTMLInputElement).style.borderColor = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'} />
-            <button onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: 12, top: 36, background: 'none', border: 'none', color: mutedColor, cursor: 'pointer', fontSize: 13, padding: 2 }}>
+            <button onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: 12, top: 36, background: 'none', border: 'none', color: mutedColor, cursor: 'pointer', padding: 2 }}>
               {showPass ? 'HIDE' : 'SHOW'}
             </button>
           </div>
@@ -231,3 +231,4 @@ export default function Login({ onLogin, theme, dark, onThemeToggle, lang, onLan
     </>
   );
 }
+
