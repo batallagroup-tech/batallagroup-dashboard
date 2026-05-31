@@ -994,11 +994,25 @@ function RetirosAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const actualizar = async (id: string, status: string) => {
     setProc(id);
     try {
-      await fetch(`${_API}/api/retiros/${id}`, {
+      const res = await fetch(`${_API}/api/retiros/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status, nota_admin: notas[id] || "" }),
       });
+      const retiro = await res.json();
+      if (status === "pagado" || status === "aprobado" || status === "rechazado") {
+        const titulo = status === "pagado" ? "Retiro pagado" : status === "aprobado" ? "Retiro aprobado" : "Retiro rechazado";
+        const cuerpo = status === "pagado"
+          ? "Tu retiro de $" + Number(retiro.monto).toFixed(2) + " MXN fue procesado"
+          : status === "aprobado"
+          ? "Tu retiro de $" + Number(retiro.monto).toFixed(2) + " MXN fue aprobado. Se procesara pronto."
+          : "Tu solicitud de retiro fue rechazada. Contacta a soporte.";
+        await fetch(`${_API}/api/notificaciones/push`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: retiro.actor_id, titulo, cuerpo, data: { tipo: "retiro", status } }),
+        }).catch(() => {});
+      }
       await cargar();
     } catch (e: any) { setError("Error: " + e.message); }
     finally { setProc(null); }
