@@ -149,7 +149,7 @@ export default function Login({ onLogin, theme, dark, onThemeToggle, lang, onLan
     width: 34, height: 34, borderRadius: 9,
     background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)',
     border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)'}`,
-    fontSize: 14, cursor: 'pointer',
+    cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     color: mutedColor, fontFamily: 'inherit', fontWeight: 700, fontSize: 11,
     transition: 'all 0.2s',
@@ -231,4 +231,5 @@ export default function Login({ onLogin, theme, dark, onThemeToggle, lang, onLan
     </>
   );
 }
+
 
