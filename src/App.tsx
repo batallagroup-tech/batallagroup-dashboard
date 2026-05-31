@@ -247,7 +247,7 @@ export default function App() {
       {screen !== 'login' && (
         <FloatingControls dark={dark} onToggle={() => setDark(v => !v)} lang={lang} onLangToggle={() => setLang(l => l === 'es' ? 'en' : 'es')} theme={theme} />
       )}
-      {screen === 'login'     && <Login onLogin={handleLogin} theme={theme} lang={lang} onLangToggle={() => setLang(l => l === 'es' ? 'en' : 'es')} />}
+      {screen === 'login' && <Login onLogin={handleLogin} theme={theme} dark={dark} onThemeToggle={() => setDark(v => !v)} lang={lang} onLangToggle={() => setLang(l => l === 'es' ? 'en' : 'es')} />}
       {screen === 'home'      && <Home onNavigate={handleNavigate} onLogout={handleLogout} {...shared} />}
       {screen === 'vor'       && <VORDashboard onBack={() => setScreen('home')} />}
       {screen === 'barrio'    && <BarrioAlerta onBack={() => setScreen('home')} />}
@@ -257,3 +257,4 @@ export default function App() {
     </>
   );
 }
+
