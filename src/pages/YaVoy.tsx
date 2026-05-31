@@ -562,9 +562,14 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const [error, setError] = useState("");
 
   const CAMPOS = [
-    { clave: "soporte_email", label: "Email de soporte", icon: "📧", desc: "Correo visible en Ayuda y soporte dentro de la app" },
-    { clave: "whatsapp",      label: "WhatsApp",          icon: "💬", desc: "URL completa: https://wa.me/52XXXXXXXXXX" },
-    { clave: "privacidad_url",label: "Política de Privacidad", icon: "🔒", desc: "URL pública de la política de privacidad" },
+    { clave: "soporte_email",    label: "Email de soporte",       icon: "📧", desc: "Correo visible en Ayuda y soporte dentro de la app" },
+    { clave: "whatsapp",         label: "WhatsApp",               icon: "💬", desc: "URL completa: https://wa.me/52XXXXXXXXXX" },
+    { clave: "privacidad_url",   label: "Politica de Privacidad", icon: "🔒", desc: "URL publica de la politica de privacidad" },
+    { clave: "envio_precio_km",  label: "Precio por km (MXN)",    icon: "🛵", desc: "Costo de envio por kilometro. Actual: $12/km" },
+    { clave: "envio_minimo",     label: "Envio minimo (MXN)",     icon: "📍", desc: "Costo minimo de envio sin importar distancia. Actual: $35" },
+    { clave: "comision_pct",     label: "Comision app (%)",       icon: "💰", desc: "Porcentaje que retiene Batalla Group de cada venta. Actual: 18%" },
+    { clave: "fondo_pct",        label: "Fondo recuperacion (%)", icon: "🛡️", desc: "Porcentaje de la comision destinado al fondo. Actual: 20%" },
+    { clave: "retiro_minimo",    label: "Retiro minimo (MXN)",    icon: "💸", desc: "Monto minimo para solicitar retiro. Actual: $50" },
   ];
 
   const cargar = async () => {
@@ -887,7 +892,7 @@ function FondoAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
         <button onClick={onBack} style={btn(theme.textMuted)}>← Volver</button>
         <div>
           <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>🛡️ Fondo de Recuperación</h1>
-          <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>15% DE COMISIONES · USO EXCLUSIVO BATALLA GROUP</p>
+          <p style={{ color: theme.textDim, fontSize: 10, margin: "2px 0 0", letterSpacing: "0.2em" }}>FONDO DE RECUPERACION · USO EXCLUSIVO BATALLA GROUP</p>
         </div>
       </div>
 
@@ -908,7 +913,7 @@ function FondoAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
               <div style={{ ...card, borderLeft: "3px solid #22c55e" }}>
                 <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>GANANCIAS NETAS BATALLA GROUP</p>
                 <p style={{ color: "#22c55e", fontSize: 28, fontWeight: 900, margin: 0 }}>MXN ${Number(resumen.gananciasNetas).toFixed(2)}</p>
-                <p style={{ color: theme.textDim, fontSize: 11, margin: "4px 0 0" }}>85% de comisiones acumuladas</p>
+                <p style={{ color: theme.textDim, fontSize: 11, margin: "4px 0 0" }}>Ganancias netas acumuladas</p>
               </div>
               <div style={{ ...card, borderLeft: "3px solid #8b5cf6" }}>
                 <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.15em", margin: "0 0 6px" }}>FONDO DISPONIBLE</p>
