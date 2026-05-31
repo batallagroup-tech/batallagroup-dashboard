@@ -77,11 +77,11 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     try {
       const existeViveres = await db().query("SELECT id FROM viveres WHERE owner_id = $1", [s.usuario_id]);
       if (existeViveres.length > 0) {
-        await db().query("UPDATE viveres SET nombre=$1, tipo=$2, direccion=$3, imagen_url=$4, status='aprobado' WHERE owner_id=$5",
-          [s.datos?.nombre_negocio ?? "", (s.datos?.tipo_negocio ?? "").toLowerCase() === "restaurante" ? "restaurante" : "tienda", s.datos?.direccion ?? "", s.datos?.foto_url ?? "", s.usuario_id]);
+        await db().query("UPDATE viveres SET nombre=$1, tipo=$2, direccion=$3, imagen_url=$4, status='aprobado', lat=$6, lng=$7 WHERE owner_id=$5",
+          [s.datos?.nombre_negocio ?? "", (s.datos?.tipo_negocio ?? "").toLowerCase() === "restaurante" ? "restaurante" : "tienda", s.datos?.direccion ?? "", s.datos?.foto_url ?? "", s.usuario_id, s.datos?.lat ?? null, s.datos?.lng ?? null]);
       } else {
-        await db().query("INSERT INTO viveres (owner_id, nombre, tipo, direccion, imagen_url, status) VALUES ($1,$2,$3,$4,$5,$6)",
-          [s.usuario_id, s.datos?.nombre_negocio ?? "", (s.datos?.tipo_negocio ?? "").toLowerCase() === "restaurante" ? "restaurante" : "tienda", s.datos?.direccion ?? "", s.datos?.foto_url ?? "", "aprobado"]);
+        await db().query("INSERT INTO viveres (owner_id, nombre, tipo, direccion, imagen_url, status, lat, lng) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+          [s.usuario_id, s.datos?.nombre_negocio ?? "", (s.datos?.tipo_negocio ?? "").toLowerCase() === "restaurante" ? "restaurante" : "tienda", s.datos?.direccion ?? "", s.datos?.foto_url ?? "", "aprobado", s.datos?.lat ?? null, s.datos?.lng ?? null]);
       }
       await db().query("UPDATE solicitudes SET status=$1 WHERE id=$2", ["aprobado", s.id]);
       await cargar();
