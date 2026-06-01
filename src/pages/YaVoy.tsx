@@ -585,7 +585,7 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     { clave: "comision_pct",     label: "Comision app (%)",       icon: "💰", desc: "Porcentaje que retiene Batalla Group de cada venta. Actual: 18%", numerico: true },
     { clave: "fondo_pct",        label: "Fondo recuperacion (%)", icon: "🛡️", desc: "Porcentaje de la comision destinado al fondo. Actual: 20%", numerico: true },
     { clave: "retiro_minimo",    label: "Retiro minimo (MXN)",    icon: "💸", desc: "Monto minimo para solicitar retiro. Actual: $50", numerico: true },
-    { clave: "mantenimiento", label: "Modo mantenimiento", icon: "🔧", desc: "true = apps en mantenimiento. false = apps funcionan normal." },
+    { clave: "mantenimiento", label: "Modo mantenimiento", icon: "🔧", desc: "Activa o desactiva la pantalla de mantenimiento en las 3 apps.", toggle: true },
   ];
 
   const cargar = async () => {
@@ -631,7 +631,7 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
           <p style={{ color: theme.textDim, textAlign: "center", paddingTop: 60 }}>Cargando...</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
-            {CAMPOS.map(({ clave, label, icon, desc, numerico }) => (
+            {(CAMPOS as any[]).map(({ clave, label, icon, desc, numerico, toggle: isToggle }) => (
               <div key={clave} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 18 }}>{icon}</span>
@@ -639,18 +639,21 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
                   {saved === clave && <span style={{ marginLeft: "auto", color: "#22c55e", fontSize: 12, fontWeight: 700 }}>✔ Guardado</span>}
                 </div>
                 <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 12px" }}>{desc}</p>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input
-                    type={(numerico as any) ? "number" : "text"}
-                    value={config[clave] ?? ""}
-                    onChange={e => setConfig(prev => ({ ...prev, [clave]: e.target.value }))}
-                    placeholder={`Valor de ${label}...`}
-                    style={{ flex: 1, background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "10px 14px", fontSize: 13, outline: "none" }}
-                  />
-                  <button onClick={() => guardar(clave)} disabled={saving === clave} style={{ ...btn("#3b82f6"), opacity: saving === clave ? 0.5 : 1 }}>
-                    {saving === clave ? "..." : "Guardar"}
-                  </button>
-                </div>
+                {isToggle ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ background: config[clave] === "true" ? "#ef4444" : "#22c55e", borderRadius: 24, padding: "10px 24px", color: "#fff", fontWeight: 900, fontSize: 14 }}>
+                      {config[clave] === "true" ? "EN MANTENIMIENTO" : "APPS FUNCIONANDO"}
+                    </div>
+                    <button onClick={() => { const n = config[clave] === "true" ? "false" : "true"; const msg = n === "true" ? "Activar mantenimiento en las 3 apps?" : "Desactivar mantenimiento?"; if (window.confirm(msg)) { setConfig(prev => ({ ...prev, [clave]: n })); setTimeout(() => guardar(clave), 100); } }} disabled={saving === clave} style={{ ...btn(config[clave] === "true" ? "#22c55e" : "#ef4444"), opacity: saving === clave ? 0.5 : 1 }}>
+                      {saving === clave ? "..." : config[clave] === "true" ? "Desactivar" : "Activar"}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input type={(numerico as any) ? "number" : "text"} value={config[clave] ?? ""} onChange={e => setConfig(prev => ({ ...prev, [clave]: e.target.value }))} placeholder={"Valor de " + label + "..."} style={{ flex: 1, background: theme.bg, border: "1px solid " + theme.border, borderRadius: 8, color: theme.text, padding: "10px 14px", fontSize: 13, outline: "none" }} />
+                    <button onClick={() => guardar(clave)} disabled={saving === clave} style={{ ...btn("#3b82f6"), opacity: saving === clave ? 0.5 : 1 }}>{saving === clave ? "..." : "Guardar"}</button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
