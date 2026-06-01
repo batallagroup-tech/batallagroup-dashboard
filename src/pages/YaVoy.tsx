@@ -585,6 +585,7 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     { clave: "comision_pct",     label: "Comision app (%)",       icon: "💰", desc: "Porcentaje que retiene Batalla Group de cada venta. Actual: 18%", numerico: true },
     { clave: "fondo_pct",        label: "Fondo recuperacion (%)", icon: "🛡️", desc: "Porcentaje de la comision destinado al fondo. Actual: 20%", numerico: true },
     { clave: "retiro_minimo",    label: "Retiro minimo (MXN)",    icon: "💸", desc: "Monto minimo para solicitar retiro. Actual: $50", numerico: true },
+    { clave: "mantenimiento",     label: "Modo mantenimiento",     icon: "🔧", desc: "true = apps muestran pantalla de mantenimiento. false = apps funcionan normal." },
   ];
 
   const cargar = async () => {
