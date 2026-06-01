@@ -601,10 +601,10 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
 
   useEffect(() => { cargar(); }, []);
 
-  const guardar = async (clave: string) => {
+  const guardar = async (clave: string, valorOverride?: string) => {
     setSaving(clave); setError("");
     try {
-      await db().query("UPDATE app_config SET valor = $1 WHERE clave = $2", [config[clave] ?? "", clave]);
+      await db().query("UPDATE app_config SET valor = $1 WHERE clave = $2", [valorOverride ?? config[clave] ?? "", clave]);
       setSaved(clave);
       setTimeout(() => setSaved(null), 2000);
     } catch (e: any) { setError("Error guardando: " + e.message); }
@@ -644,7 +644,7 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
                     <div style={{ background: config[clave] === "true" ? "#ef4444" : "#22c55e", borderRadius: 24, padding: "10px 24px", color: "#fff", fontWeight: 900, fontSize: 14 }}>
                       {config[clave] === "true" ? "EN MANTENIMIENTO" : "APPS FUNCIONANDO"}
                     </div>
-                    <button onClick={() => { const n = config[clave] === "true" ? "false" : "true"; const msg = n === "true" ? "Activar mantenimiento en las 3 apps?" : "Desactivar mantenimiento?"; if (window.confirm(msg)) { setConfig(prev => ({ ...prev, [clave]: n })); setTimeout(() => guardar(clave), 100); } }} disabled={saving === clave} style={{ ...btn(config[clave] === "true" ? "#22c55e" : "#ef4444"), opacity: saving === clave ? 0.5 : 1 }}>
+                    <button onClick={() => { const n = config[clave] === "true" ? "false" : "true"; const msg = n === "true" ? "Activar mantenimiento en las 3 apps?" : "Desactivar mantenimiento?"; if (window.confirm(msg)) { setConfig(prev => ({ ...prev, [clave]: n })); guardar(clave, n); } }} disabled={saving === clave} style={{ ...btn(config[clave] === "true" ? "#22c55e" : "#ef4444"), opacity: saving === clave ? 0.5 : 1 }}>
                       {saving === clave ? "..." : config[clave] === "true" ? "Desactivar" : "Activar"}
                     </button>
                   </div>
