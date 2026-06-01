@@ -585,7 +585,7 @@ function ConfigAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     { clave: "comision_pct",     label: "Comision app (%)",       icon: "💰", desc: "Porcentaje que retiene Batalla Group de cada venta. Actual: 18%", numerico: true },
     { clave: "fondo_pct",        label: "Fondo recuperacion (%)", icon: "🛡️", desc: "Porcentaje de la comision destinado al fondo. Actual: 20%", numerico: true },
     { clave: "retiro_minimo",    label: "Retiro minimo (MXN)",    icon: "💸", desc: "Monto minimo para solicitar retiro. Actual: $50", numerico: true },
-    { clave: "mantenimiento",     label: "Modo mantenimiento",     icon: "🔧", desc: "true = apps muestran pantalla de mantenimiento. false = apps funcionan normal." },
+    { clave: "mantenimiento", label: "Modo mantenimiento", icon: "🔧", desc: "true = apps en mantenimiento. false = apps funcionan normal." },
   ];
 
   const cargar = async () => {
@@ -1333,50 +1333,15 @@ export default function YaVoy({ onBack, theme }: Props) {
   const [sub, setSub] = useState<SubApp>(null);
   const [resumenRapido, setResumenRapido] = useState<any>(null);
   useEffect(() => {
-    const q = "SELECT " +
-      "(SELECT COUNT(*) FROM pedidos WHERE creado_en::date = CURRENT_DATE) as pedidos_hoy," +
-      "(SELECT COUNT(*) FROM pedidos WHERE status IN (
-'
-nuevo
-'
-,
-'
-preparando
-'
-,
-'
-en_camino
-'
-,
-'
-listo
-'
-)) as pedidos_activos," +
-      "(SELECT COALESCE(SUM(total),0) FROM pedidos WHERE creado_en::date = CURRENT_DATE AND status = 
-'
-entregado
-'
-) as ingresos_hoy," +
-      "(SELECT nombre FROM viveres WHERE status = 
-'
-aprobado
-'
- ORDER BY (SELECT COUNT(*) FROM pedidos WHERE negocio_id = viveres.id AND creado_en > NOW() - INTERVAL 
-'
-7 days
-'
-) DESC LIMIT 1) as top_restaurante," +
-      "(SELECT COUNT(*) FROM retiros WHERE status = 
-'
-pendiente
-'
-) as retiros_pendientes," +
-      "(SELECT COUNT(*) FROM solicitudes WHERE status = 
-'
-pendiente
-'
-) as solicitudes_pendientes";
-    db().query(q).then((r: any[]) => setResumenRapido(r[0])).catch(() => {});
+    db().query([
+      "SELECT",
+      "(SELECT COUNT(*) FROM pedidos WHERE creado_en::date = CURRENT_DATE) as pedidos_hoy,",
+      "(SELECT COUNT(*) FROM pedidos WHERE status IN ('nuevo','preparando','en_camino','listo')) as pedidos_activos,",
+      "(SELECT COALESCE(SUM(total),0) FROM pedidos WHERE creado_en::date = CURRENT_DATE AND status = 'entregado') as ingresos_hoy,",
+      "(SELECT nombre FROM viveres WHERE status = 'aprobado' ORDER BY (SELECT COUNT(*) FROM pedidos WHERE negocio_id = viveres.id AND creado_en > NOW() - INTERVAL '7 days') DESC LIMIT 1) as top_restaurante,",
+      "(SELECT COUNT(*) FROM retiros WHERE status = 'pendiente') as retiros_pendientes,",
+      "(SELECT COUNT(*) FROM solicitudes WHERE status = 'pendiente') as solicitudes_pendientes"
+    ].join(" ")).then((r) => setResumenRapido(r[0])).catch(() => {});
   }, []);
   if (sub === "restaurante") return <RestauranteAdmin onBack={() => setSub(null)} theme={theme} />;
   if (sub === "repartidor")  return <RepartidorAdmin  onBack={() => setSub(null)} theme={theme} />;
@@ -1412,36 +1377,36 @@ pendiente
         </div>
       </div>
       <div style={{ padding: "32px 28px", maxWidth: 700, margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16 }}>
         {resumenRapido && (
           <div style={{ marginBottom: 28 }}>
             <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, letterSpacing: "0.2em", margin: "0 0 12px" }}>RESUMEN HOY</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 10, marginBottom: 10 }}>
               {([
-                { label: "Pedidos hoy", value: String(resumenRapido.pedidos_hoy), icon: "🛵", color: "#f97316" },
-                { label: "Activos ahora", value: String(resumenRapido.pedidos_activos), icon: "🔥", color: "#ef4444" },
-                { label: "Ingresos hoy", value: "MXN $" + Number(resumenRapido.ingresos_hoy).toFixed(0), icon: "💰", color: "#22c55e" },
-                { label: "Retiros pendientes", value: String(resumenRapido.retiros_pendientes), icon: "💸", color: Number(resumenRapido.retiros_pendientes) > 0 ? "#f59e0b" : "#64748b" },
-                { label: "Solicitudes", value: String(resumenRapido.solicitudes_pendientes), icon: "📋", color: Number(resumenRapido.solicitudes_pendientes) > 0 ? "#3b82f6" : "#64748b" },
+                { label: "Pedidos hoy", value: String(resumenRapido.pedidos_hoy || 0), icon: "🛵", color: "#f97316" },
+                { label: "Activos ahora", value: String(resumenRapido.pedidos_activos || 0), icon: "🔥", color: "#ef4444" },
+                { label: "Ingresos hoy", value: "MXN $" + Number(resumenRapido.ingresos_hoy || 0).toFixed(0), icon: "💰", color: "#22c55e" },
+                { label: "Retiros pendientes", value: String(resumenRapido.retiros_pendientes || 0), icon: "💸", color: Number(resumenRapido.retiros_pendientes) > 0 ? "#f59e0b" : "#64748b" },
+                { label: "Solicitudes", value: String(resumenRapido.solicitudes_pendientes || 0), icon: "📋", color: Number(resumenRapido.solicitudes_pendientes) > 0 ? "#3b82f6" : "#64748b" },
               ] as {label:string;value:string;icon:string;color:string}[]).map(({ label, value, icon, color }) => (
                 <div key={label} style={{ background: theme.surface, border: "1px solid " + theme.border, borderRadius: 12, padding: "14px 16px" }}>
                   <div style={{ fontSize: 22, marginBottom: 4 }}>{icon}</div>
                   <p style={{ color, fontSize: 20, fontWeight: 900, margin: "0 0 2px" }}>{value}</p>
-                  <p style={{ color: theme.textDim, fontSize: 10, margin: 0, letterSpacing: "0.1em" }}>{label.toUpperCase()}</p>
+                  <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>{label.toUpperCase()}</p>
                 </div>
               ))}
             </div>
             {resumenRapido.top_restaurante && (
-              <div style={{ background: theme.surface, border: "1px solid " + theme.border, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ background: theme.surface, border: "1px solid " + theme.border, borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <span style={{ fontSize: 20 }}>🏆</span>
                 <div>
-                  <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, margin: "0 0 2px", letterSpacing: "0.1em" }}>RESTAURANTE MAS ACTIVO (7 DIAS)</p>
+                  <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, margin: "0 0 2px" }}>RESTAURANTE MAS ACTIVO (7 DIAS)</p>
                   <p style={{ color: theme.text, fontSize: 14, fontWeight: 900, margin: 0 }}>{resumenRapido.top_restaurante}</p>
                 </div>
               </div>
             )}
           </div>
         )}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16 }}>
           {SUBAPPS.map(app => (
             <div key={app.id} onClick={() => setSub(app.id as SubApp)}
               style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "24px 20px", cursor: "pointer" }}>
