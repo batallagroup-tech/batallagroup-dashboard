@@ -1024,7 +1024,7 @@ function RetirosAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status, nota_admin: notas[id] || "" }),
       });
-      const retiro = await res.json();
+      await res.json();
       await cargar();
     } catch (e: any) { setError("Error: " + e.message); }
     finally { setProc(null); }
