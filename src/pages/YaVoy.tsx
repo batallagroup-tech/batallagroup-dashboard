@@ -25,7 +25,7 @@ const SUBAPPS = [
   { id: "soporte",     name: "Soporte",               icon: "🎧",  desc: "Reportes de usuarios — ayuda y problemas" },
   { id: "bloqueos",    name: "Cuentas Bloqueadas",    icon: "🔒",  desc: "Bloqueo y desbloqueo de usuarios, repartidores y restaurantes" },
   { id: "retiros",     name: "Retiros",                icon: "💸",  desc: "Solicitudes de retiro de ganancias — restaurantes y repartidores" },
-  { id: "fondo",       name: "Fondo de Recuperación",  icon: "🛡️",  desc: "15% de comisiones reservado para emergencias y contingencias" },
+  { id: "fondo",       name: "Fondo de Recuperacion",  icon: "🛡️",  desc: "20% de comisiones reservado para emergencias y contingencias" },
   { id: "contingencias", name: "Contingencias",           icon: "🚨",  desc: "No pagos, accidentes y cancelaciones automaticas" },
 ];
 
@@ -1025,19 +1025,6 @@ function RetirosAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
         body: JSON.stringify({ status, nota_admin: notas[id] || "" }),
       });
       const retiro = await res.json();
-      if (status === "pagado" || status === "aprobado" || status === "rechazado") {
-        const titulo = status === "pagado" ? "Retiro pagado" : status === "aprobado" ? "Retiro aprobado" : "Retiro rechazado";
-        const cuerpo = status === "pagado"
-          ? "Tu retiro de $" + Number(retiro.monto).toFixed(2) + " MXN fue procesado"
-          : status === "aprobado"
-          ? "Tu retiro de $" + Number(retiro.monto).toFixed(2) + " MXN fue aprobado. Se procesara pronto."
-          : "Tu solicitud de retiro fue rechazada. Contacta a soporte.";
-        await fetch(`${_API}/api/notificaciones/push`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: retiro.actor_id, titulo, cuerpo, data: { tipo: "retiro", status } }),
-        }).catch(() => {});
-      }
       await cargar();
     } catch (e: any) { setError("Error: " + e.message); }
     finally { setProc(null); }
