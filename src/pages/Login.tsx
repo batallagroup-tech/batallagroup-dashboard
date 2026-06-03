@@ -207,7 +207,7 @@ export default function Login({ onLogin, theme, dark, onThemeToggle, lang, onLan
           <div style={{ marginBottom: 28, position: 'relative' }}>
             <label style={{ color: mutedColor, fontSize: 10, letterSpacing: '0.25em', display: 'block', marginBottom: 8 }}>{t.password}</label>
             <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && login()}
-              placeholder="••••••••••••" style={{ ...inp, paddingRight: 44 }}
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" style={{ ...inp, paddingRight: 44 }}
               onFocus={e => (e.target as HTMLInputElement).style.borderColor = '#3b82f6'}
               onBlur={e => (e.target as HTMLInputElement).style.borderColor = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'} />
             <button onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: 12, top: 36, background: 'none', border: 'none', color: mutedColor, cursor: 'pointer', padding: 2 }}>
