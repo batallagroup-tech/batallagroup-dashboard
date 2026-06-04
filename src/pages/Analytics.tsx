@@ -299,10 +299,10 @@ export default function Analytics({ onBack, theme }: Props) {
               <Donut items={baIncCats} />
             </div>
             <div style={{ ...card, gridColumn: '1 / -1' }}>
-              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ CIUDADES MÁS ACTIVAS</p>
+              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ TOP CATEGORÍAS DE INCIDENTES</p>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 100 }}>
-                {CITIES.map((c, i) => {
-                  const max = Math.max(...CITIES.map(x => x.count));
+                {baIncCats.map((c, i) => {
+                  const max = Math.max(...baIncCats.map(x => x.count));
                   return (
                     <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
                       <span style={{ color: c.color, fontSize: 10, fontWeight: 700 }}>{c.count}</span>
