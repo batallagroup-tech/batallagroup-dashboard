@@ -1,5 +1,4 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from './supabase';
 import type { Screen } from './types';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -199,7 +198,7 @@ function NotifBell({ theme }: { theme: Theme }) {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('login');
+  const [screen, setScreen] = useState<Screen>(() => sessionStorage.getItem('bg_auth') === '1' ? 'home' : 'login');
   const [dark, setDark] = useState(true);
   const [lang, setLang] = useState<Lang>('es');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -236,18 +235,8 @@ export default function App() {
     };
   }, [screen]);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setScreen('home');
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setScreen(session ? 'home' : 'login');
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogin = () => setScreen('home');
-  const handleLogout = () => { supabase.auth.signOut(); setScreen('login'); };
+  const handleLogin = () => { sessionStorage.setItem('bg_auth', '1'); setScreen('home'); };
+  const handleLogout = () => { sessionStorage.removeItem('bg_auth'); setScreen('login'); };
   const handleNavigate = useCallback((s: Screen) => setScreen(s), []);
   const shared = { theme, lang, notifBell: <NotifBell theme={theme} />, onSearch: () => setSearchOpen(true) };
 
