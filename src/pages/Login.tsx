@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../supabase';
 import type { Theme } from '../App';
 
 interface Props {
@@ -120,16 +121,16 @@ export default function Login({ onLogin, theme, dark, onThemeToggle, lang, onLan
     else document.exitFullscreen().catch(() => {});
   };
 
-  const login = () => {
+  const login = async () => {
     if (!email || !password) return;
-    setLoading(true);
-    setTimeout(() => {
-      if (email === import.meta.env.VITE_ADMIN_EMAIL && password === import.meta.env.VITE_ADMIN_PASSWORD) {
-        setError(''); onLogin();
-      } else {
-        setError(t.error); setLoading(false);
-      }
-    }, 400);
+    setLoading(true); setError('');
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    if (authError) {
+      setError(t.error);
+      setLoading(false);
+    } else {
+      onLogin();
+    }
   };
 
   const textColor = dark ? '#eeeeff' : '#0a0a14';

@@ -671,6 +671,7 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const [procesando, setProc] = useState<string | null>(null);
   const [notaAdmin, setNotaAdmin] = useState<Record<string, string>>({});
   const [expandido, setExp] = useState<string | null>(null);
+  const [pedidoDetalle, setPedidoDetalle] = useState<Record<string, any>>({});
 
   const cargar = async () => {
     setLoading(true); setError("");
@@ -682,6 +683,20 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   };
 
   useEffect(() => { cargar(); const iv = setInterval(cargar, 15000); return () => clearInterval(iv); }, []);
+
+  const fetchPedido = async (pedidoId: string) => {
+    if (pedidoDetalle[pedidoId] !== undefined) return;
+    setPedidoDetalle(prev => ({ ...prev, [pedidoId]: null }));
+    try {
+      const rows = await db().query(
+        `SELECT p.*, v.nombre as negocio_nombre, u.email as cliente_email, u.nombre as cliente_nombre
+         FROM pedidos p LEFT JOIN viveres v ON v.id = p.negocio_id
+         LEFT JOIN usuarios u ON u.id = p.cliente_id WHERE p.id = $1`,
+        [pedidoId]
+      ) as any[];
+      setPedidoDetalle(prev => ({ ...prev, [pedidoId]: rows[0] || false }));
+    } catch { setPedidoDetalle(prev => ({ ...prev, [pedidoId]: false })); }
+  };
 
   const actualizar = async (id: string, status: string) => {
     setProc(id);
@@ -731,7 +746,7 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
         : filtrados.length === 0 ? <p style={{ color: theme.textDim, textAlign: "center", padding: "60px 0" }}>Sin reportes {filtro !== "todos" ? filtro : ""}</p>
         : filtrados.map(r => (
           <div key={r.id} style={card}>
-            <div style={{ display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer" }} onClick={() => setExp(expandido === r.id ? null : r.id)}>
+            <div style={{ display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer" }} onClick={() => { const next = expandido === r.id ? null : r.id; setExp(next); if (next && r.pedido_id) fetchPedido(r.pedido_id); }}>
               <div style={{ width: 44, height: 44, borderRadius: 10, background: `${STATUS_COLOR[r.status] || "#64748b"}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
                 {r.tipo === "Mi pedido no llego" ? "📦" : r.tipo === "El repartidor no llego" ? "🛵" : r.tipo === "Producto incorrecto o en mal estado" ? "⚠️" : r.tipo === "Cobro incorrecto" ? "💳" : r.tipo === "El restaurante no acepto mi pedido" ? "🍽️" : "💬"}
               </div>
@@ -748,6 +763,32 @@ function SoporteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
             </div>
             {expandido === r.id && (
               <div style={{ marginTop: 14, borderTop: `1px solid ${theme.border}`, paddingTop: 14 }}>
+                {r.pedido_id && (() => {
+                  const p = pedidoDetalle[r.pedido_id];
+                  if (p === undefined) return null;
+                  if (p === null) return <p style={{ color: theme.textDim, fontSize: 12, marginBottom: 12 }}>Cargando pedido...</p>;
+                  if (p === false) return <p style={{ color: "#ef4444", fontSize: 12, marginBottom: 12 }}>No se encontró el pedido.</p>;
+                  return (
+                    <div style={{ background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 10, padding: "12px 14px", marginBottom: 14 }}>
+                      <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: "0.2em", margin: "0 0 8px", fontWeight: 700 }}>PEDIDO VINCULADO #{p.id?.slice(-6).toUpperCase()}</p>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 16px", fontSize: 12 }}>
+                        <span style={{ color: theme.textMuted }}>Restaurante</span><span style={{ color: theme.text, fontWeight: 700 }}>{p.negocio_nombre || "—"}</span>
+                        <span style={{ color: theme.textMuted }}>Cliente</span><span style={{ color: theme.text, fontWeight: 700 }}>{p.cliente_nombre || p.cliente_email || "—"}</span>
+                        <span style={{ color: theme.textMuted }}>Total</span><span style={{ color: theme.text, fontWeight: 700 }}>${Number(p.total || 0).toFixed(2)}</span>
+                        <span style={{ color: theme.textMuted }}>Status</span><span style={{ color: p.status === "entregado" ? "#22c55e" : p.status === "cancelado" ? "#ef4444" : "#f59e0b", fontWeight: 700 }}>{p.status}</span>
+                        <span style={{ color: theme.textMuted }}>Pago</span><span style={{ color: theme.text, fontWeight: 700 }}>{p.metodo_pago || "—"}</span>
+                        <span style={{ color: theme.textMuted }}>Fecha</span><span style={{ color: theme.text, fontWeight: 700 }}>{new Date(p.creado_en).toLocaleDateString("es-MX")}</span>
+                      </div>
+                      {p.items?.length > 0 && (
+                        <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${theme.border}` }}>
+                          {p.items.map((it: any, i: number) => (
+                            <span key={i} style={{ color: theme.textDim, fontSize: 11 }}>{it.cantidad}x {it.nombre}{i < p.items.length - 1 ? " · " : ""}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
                 {r.nota_admin && <p style={{ color: "#3b82f6", fontSize: 12, background: "#3b82f615", border: "1px solid #3b82f630", borderRadius: 8, padding: "8px 12px", marginBottom: 12 }}>Nota previa: {r.nota_admin}</p>}
                 <textarea value={notaAdmin[r.id] || ""} onChange={e => setNotaAdmin(prev => ({ ...prev, [r.id]: e.target.value }))}
                   placeholder="Nota interna (opcional)..."
