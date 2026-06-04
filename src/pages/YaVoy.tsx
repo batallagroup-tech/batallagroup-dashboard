@@ -273,7 +273,7 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
     if (!razon.trim()) return;
     setProc(id);
     try {
-      const s = sol.find(x => x.id === id);
+      const s = solicitudes.find(x => x.id === id);
       await db().query("UPDATE solicitudes SET status=$1, razon_rechazo=$2 WHERE id=$3", ["rechazado", razon, id]);
       if (s) await notificarAPI("rechazar-repartidor", { usuarioId: s.usuario_id, razon });
       setRech(null); setRazon(""); await cargar();
