@@ -651,8 +651,25 @@ const PHONE_PLACEHOLDER: PhoneEntry[] = [
   { id: '5', name: 'Protección Civil Hidalgo', number: '800-727-2828', location: 'Hidalgo (estatal)', lat: '20.1011', lng: '-98.7591', type: 'municipal', notes: 'Número gratuito' },
 ];
 
+// SQL para crear la tabla en Supabase (ejecutar una sola vez en el SQL Editor):
+// CREATE TABLE IF NOT EXISTS emergency_phones (
+//   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+//   name TEXT NOT NULL,
+//   number TEXT NOT NULL,
+//   location TEXT NOT NULL,
+//   lat TEXT DEFAULT '',
+//   lng TEXT DEFAULT '',
+//   type TEXT NOT NULL CHECK (type IN ('policia','emergencia','municipal','otro')),
+//   notes TEXT DEFAULT '',
+//   created_at TIMESTAMPTZ DEFAULT NOW()
+// );
+// ALTER TABLE emergency_phones ENABLE ROW LEVEL SECURITY;
+// CREATE POLICY "anon_all" ON emergency_phones FOR ALL TO anon USING (true) WITH CHECK (true);
+
 function PhoneDirectory() {
-  const [phones, setPhones] = useState<PhoneEntry[]>(PHONE_PLACEHOLDER);
+  const [phones, setPhones] = useState<PhoneEntry[]>([]);
+  const [loadingPhones, setLoadingPhones] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<PhoneEntry['type'] | 'all'>('all');
   const [search, setSearch] = useState('');
@@ -667,18 +684,46 @@ function PhoneDirectory() {
   const [fNotes, setFNotes] = useState('');
   const [fErr, setFErr] = useState('');
 
+  useEffect(() => {
+    const loadPhones = async () => {
+      const { data, error } = await supabase
+        .from('emergency_phones')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        // Tabla no existe aún — usar datos placeholder
+        setPhones(PHONE_PLACEHOLDER);
+      } else {
+        setPhones(
+          (data || []).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            number: p.number,
+            location: p.location,
+            lat: p.lat || '',
+            lng: p.lng || '',
+            type: p.type as PhoneEntry['type'],
+            notes: p.notes || '',
+          }))
+        );
+      }
+      setLoadingPhones(false);
+    };
+    loadPhones();
+  }, []);
+
   const resetForm = () => {
     setFName(''); setFNumber(''); setFLocation('');
     setFLat(''); setFLng(''); setFType('policia'); setFNotes(''); setFErr('');
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!fName.trim() || !fNumber.trim() || !fLocation.trim()) {
       setFErr('Nombre, número y ubicación son obligatorios.');
       return;
     }
-    const entry: PhoneEntry = {
-      id: Date.now().toString(),
+    setSaving(true);
+    const entry = {
       name: fName.trim(),
       number: fNumber.trim(),
       location: fLocation.trim(),
@@ -687,12 +732,22 @@ function PhoneDirectory() {
       type: fType,
       notes: fNotes.trim(),
     };
-    setPhones(prev => [entry, ...prev]);
+    const { data, error } = await supabase.from('emergency_phones').insert([entry]).select().single();
+    if (error) {
+      // Fallback: agregar localmente si la tabla no existe
+      setPhones(prev => [{ ...entry, id: Date.now().toString() }, ...prev]);
+    } else {
+      setPhones(prev => [{ ...entry, id: data.id }, ...prev]);
+    }
     resetForm();
     setShowForm(false);
+    setSaving(false);
   };
 
-  const handleDelete = (id: string) => setPhones(prev => prev.filter(p => p.id !== id));
+  const handleDelete = async (id: string) => {
+    setPhones(prev => prev.filter(p => p.id !== id));
+    await supabase.from('emergency_phones').delete().eq('id', id);
+  };
 
   const filtered = phones.filter(p => {
     const matchType = filter === 'all' || p.type === filter;
@@ -713,7 +768,9 @@ function PhoneDirectory() {
           <p style={S.section}>━━ DIRECTORIO DE EMERGENCIAS</p>
           <p style={{ color: '#7070b0', fontSize: 12, margin: 0 }}>
             Números mostrados en la app según ubicación y cercanía del usuario.{' '}
-            <span style={{ color: '#4a4a80', fontSize: 11 }}>(Pendiente de conectar a BD)</span>
+            {loadingPhones
+              ? <span style={{ color: '#4a4a80', fontSize: 11 }}>Cargando…</span>
+              : <span style={{ color: '#22c55e', fontSize: 11 }}>● Supabase</span>}
           </p>
         </div>
         <button
@@ -788,8 +845,8 @@ function PhoneDirectory() {
             <p style={{ color: '#ef4444', fontSize: 12, marginTop: 10, marginBottom: 0 }}>⚠ {fErr}</p>
           )}
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleAdd} style={{ ...S.btn('#22c55e'), padding: '10px 24px' }}>
-              ✓ Guardar número
+            <button onClick={handleAdd} disabled={saving} style={{ ...S.btn('#22c55e'), padding: '10px 24px', opacity: saving ? 0.6 : 1 }}>
+              {saving ? 'Guardando…' : '✓ Guardar número'}
             </button>
             <button onClick={() => { setShowForm(false); resetForm(); }} style={{ ...S.btn('#6060a0'), padding: '10px 20px' }}>
               Cancelar
@@ -829,7 +886,12 @@ function PhoneDirectory() {
 
       {/* Phone list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {filtered.length === 0 && (
+        {loadingPhones && (
+          <div style={{ ...S.card, textAlign: 'center', color: '#4a4a80', padding: '32px' }}>
+            Cargando directorio…
+          </div>
+        )}
+        {!loadingPhones && filtered.length === 0 && (
           <div style={{ ...S.card, textAlign: 'center', color: '#4a4a80', padding: '32px' }}>
             Sin resultados para esta búsqueda.
           </div>

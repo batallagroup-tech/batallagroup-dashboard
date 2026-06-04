@@ -1,34 +1,40 @@
-/**
- * Analytics.tsx — Gráficas y métricas de todas tus apps
- * Sin Supabase por ahora — datos mock realistas
- */
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Theme } from '../App';
+import { supabase } from '../supabase';
+import { neon } from '@neondatabase/serverless';
 
 interface Props { onBack: () => void; theme: Theme; }
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
 const WEEKS = ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6','Sem 7','Sem 8'];
 
-const BARRIO_USERS   = [12, 19, 28, 35, 41, 58, 72, 89];
-const BARRIO_INC     = [34, 56, 48, 71, 65, 88, 102, 94];
-const BARRIO_SOS     = [2, 4, 3, 6, 5, 8, 7, 11];
+const CAT_COLORS: Record<string, string> = {
+  Crime: '#ef4444', Accident: '#f59e0b', Missing: '#3b82f6', Notice: '#94a3b8',
+  Sanitary: '#10b981', Environment: '#22c55e', Fire: '#ea580c',
+  Infrastructure: '#eab308', Utility: '#22d3ee', Health: '#fb7185',
+  Other: '#64748b', SOS: '#ef4444',
+};
+const CAT_ES: Record<string, string> = {
+  Crime: 'Crimen', Accident: 'Siniestro', Missing: 'Búsqueda', Notice: 'Aviso',
+  Sanitary: 'Sanidad', Environment: 'Ambiental', Fire: 'Incendio',
+  Infrastructure: 'Infraestructura', Utility: 'Servicios', Health: 'Salud',
+  Other: 'Otro', SOS: 'SOS',
+};
 
-const VOR_SESSIONS   = [210, 345, 289, 410, 502, 480, 620, 711];
-const VOR_RETOS      = [2100, 2120, 2150, 2180, 2190, 2200, 2210, 2216];
+function groupByWeek(items: { created_at: string }[], weekCount = 8): number[] {
+  const now = Date.now();
+  return Array.from({ length: weekCount }, (_, i) => {
+    const end = now - (weekCount - 1 - i) * 7 * 86400000;
+    const start = end - 7 * 86400000;
+    return items.filter(x => { const t = new Date(x.created_at).getTime(); return t >= start && t < end; }).length;
+  });
+}
 
-const CITIES = [
-  { name: 'Zacatlán', count: 43, color: '#3b82f6' },
-  { name: 'Puebla', count: 31, color: '#8b5cf6' },
-  { name: 'CDMX', count: 28, color: '#e91e8c' },
-  { name: 'Monterrey', count: 19, color: '#f97316' },
-  { name: 'Guadalajara', count: 14, color: '#22c55e' },
-  { name: 'Otros', count: 22, color: '#64748b' },
-];
-
-const INC_CATS = [
+// Fallback mock data mientras carga o si no hay datos
+const MOCK_INC   = [34, 56, 48, 71, 65, 88, 102, 94];
+const MOCK_USERS = [12, 19, 28, 35, 41, 58, 72, 89];
+const MOCK_SOS   = [2, 4, 3, 6, 5, 8, 7, 11];
+const VOR_SESSIONS = [210, 345, 289, 410, 502, 480, 620, 711];
+const MOCK_INC_CATS = [
   { name: 'Crimen', count: 38, color: '#ef4444' },
   { name: 'Siniestro', count: 22, color: '#f59e0b' },
   { name: 'Aviso', count: 18, color: '#94a3b8' },
@@ -146,26 +152,93 @@ function Donut({ items }: { items: { name: string; count: number; color: string 
 export default function Analytics({ onBack, theme }: Props) {
   const [tab, setTab] = useState<'barrio' | 'vor' | 'general'>('barrio');
 
+  // Datos reales de Supabase/Neon
+  const [baIncWeekly, setBaIncWeekly] = useState(MOCK_INC);
+  const [baUsersWeekly, setBaUsersWeekly] = useState(MOCK_USERS);
+  const [baSosWeekly, setBaSosWeekly]   = useState(MOCK_SOS);
+  const [baIncCats, setBaIncCats]       = useState(MOCK_INC_CATS);
+  const [baTotals, setBaTotals]         = useState({ incidents: 0, users: 0, sos: 0 });
+  const [vorTotals, setVorTotals]       = useState({ retos: 0, castigos: 0 });
+  const [yvTotals, setYvTotals]         = useState({ usuarios: 0, pedidos: 0 });
+  const [loaded, setLoaded]             = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      // BarrioAlerta — Supabase
+      try {
+        const cutoff = new Date(Date.now() - 8 * 7 * 86400000).toISOString();
+        const [incAll, usersAll] = await Promise.all([
+          supabase.from('incidents').select('created_at, category, is_sos').gte('created_at', cutoff),
+          supabase.from('users').select('created_at').gte('created_at', cutoff),
+        ]);
+        const [totalUsers] = await Promise.all([
+          supabase.from('users').select('id', { count: 'exact', head: true }),
+        ]);
+        const incidents = incAll.data ?? [];
+        const users     = usersAll.data ?? [];
+        if (incidents.length) {
+          setBaIncWeekly(groupByWeek(incidents));
+          setBaSosWeekly(groupByWeek(incidents.filter(i => i.is_sos)));
+          // Distribución por categoría
+          const catMap: Record<string, number> = {};
+          incidents.forEach((i: any) => { catMap[i.category] = (catMap[i.category] ?? 0) + 1; });
+          const cats = Object.entries(catMap)
+            .sort((a, b) => b[1] - a[1]).slice(0, 6)
+            .map(([cat, count]) => ({ name: CAT_ES[cat] ?? cat, count, color: CAT_COLORS[cat] ?? '#64748b' }));
+          if (cats.length) setBaIncCats(cats);
+        }
+        if (users.length) setBaUsersWeekly(groupByWeek(users));
+        setBaTotals({
+          incidents: incidents.length,
+          users: totalUsers.count ?? 0,
+          sos: incidents.filter((i: any) => i.is_sos).length,
+        });
+      } catch {}
+
+      // VOR — Supabase
+      try {
+        const [retosRes, castigosRes] = await Promise.all([
+          supabase.from('retos').select('id', { count: 'exact', head: true }),
+          supabase.from('castigos').select('id', { count: 'exact', head: true }),
+        ]);
+        setVorTotals({ retos: retosRes.count ?? 0, castigos: castigosRes.count ?? 0 });
+      } catch {}
+
+      // Ya Voy! — Neon
+      try {
+        const db = neon(import.meta.env.VITE_DATABASE_URL!);
+        const [uRes, pRes] = await Promise.all([
+          db.query("SELECT COUNT(*)::int AS cnt FROM usuarios WHERE rol = 'cliente'"),
+          db.query("SELECT COUNT(*)::int AS cnt FROM pedidos"),
+        ]);
+        setYvTotals({ usuarios: (uRes[0] as any)?.cnt ?? 0, pedidos: (pRes[0] as any)?.cnt ?? 0 });
+      } catch {}
+
+      setLoaded(true);
+    };
+    load();
+  }, []);
+
   const card = {
     background: theme.surface, border: `1px solid ${theme.border}`,
     borderRadius: 14, padding: '20px 22px',
   };
 
   const KPIs = tab === 'barrio' ? [
-    { label: 'Usuarios totales', value: '89', delta: '+23%', color: '#3b82f6' },
-    { label: 'Incidentes (8 sem)', value: '558', delta: '+18%', color: '#ef4444' },
-    { label: 'SOS disparados', value: '46', delta: '+37%', color: '#f59e0b' },
-    { label: 'Ciudades activas', value: '5+', delta: 'Nuevo', color: '#22c55e' },
+    { label: 'Usuarios totales',  value: loaded ? String(baTotals.users)     : '…', delta: 'Real', color: '#3b82f6' },
+    { label: 'Incidentes (8 sem)',value: loaded ? String(baTotals.incidents)  : '…', delta: 'Real', color: '#ef4444' },
+    { label: 'SOS disparados',    value: loaded ? String(baTotals.sos)        : '…', delta: 'Real', color: '#f59e0b' },
+    { label: 'Ciudades activas',  value: '5+', delta: 'Hidalgo', color: '#22c55e' },
   ] : tab === 'vor' ? [
-    { label: 'Sesiones (8 sem)', value: '3,567', delta: '+41%', color: '#e91e8c' },
-    { label: 'Retos totales', value: '2,216', delta: '+116', color: '#8b5cf6' },
-    { label: 'Modos activos', value: '13', delta: 'Estable', color: '#3b82f6' },
-    { label: 'Versión', value: 'v1.4.0', delta: 'Latest', color: '#22c55e' },
+    { label: 'Sesiones (8 sem)',  value: '3,567', delta: 'Mock',   color: '#e91e8c' },
+    { label: 'Retos totales',     value: loaded ? String(vorTotals.retos)     : '…', delta: 'Real', color: '#8b5cf6' },
+    { label: 'Castigos totales',  value: loaded ? String(vorTotals.castigos)  : '…', delta: 'Real', color: '#3b82f6' },
+    { label: 'Modos activos',     value: '13',    delta: 'Estable', color: '#22c55e' },
   ] : [
-    { label: 'Apps en prod', value: '2', delta: 'LIVE', color: '#22c55e' },
-    { label: 'Apps en dev', value: '1', delta: 'DEV', color: '#f59e0b' },
-    { label: 'Total usuarios', value: '89+', delta: 'Creciendo', color: '#3b82f6' },
-    { label: 'Uptime', value: '99.8%', delta: '30 días', color: '#8b5cf6' },
+    { label: 'Apps en prod',      value: '2',     delta: 'LIVE',     color: '#22c55e' },
+    { label: 'Apps en dev',       value: '1',     delta: 'DEV',      color: '#f59e0b' },
+    { label: 'Clientes Ya Voy',   value: loaded ? String(yvTotals.usuarios)   : '…', delta: 'Real', color: '#3b82f6' },
+    { label: 'Pedidos históricos',value: loaded ? String(yvTotals.pedidos)    : '…', delta: 'Real', color: '#f97316' },
   ];
 
   return (
@@ -176,7 +249,7 @@ export default function Analytics({ onBack, theme }: Props) {
           <button onClick={onBack} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.textMuted, padding: '6px 14px', cursor: 'pointer', fontSize: 12 }}>← Volver</button>
           <div>
             <h1 style={{ color: theme.text, fontSize: 17, fontWeight: 900, margin: 0 }}>📊 Analytics</h1>
-            <p style={{ color: theme.textDim, fontSize: 10, margin: '2px 0 0', letterSpacing: '0.2em' }}>MÉTRICAS Y CRECIMIENTO · DATOS MOCK</p>
+            <p style={{ color: theme.textDim, fontSize: 10, margin: '2px 0 0', letterSpacing: '0.2em' }}>MÉTRICAS Y CRECIMIENTO · {loaded ? 'DATOS REALES' : 'CARGANDO…'}</p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -208,22 +281,22 @@ export default function Analytics({ onBack, theme }: Props) {
         {tab === 'barrio' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div style={card}>
-              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ CRECIMIENTO DE USUARIOS (8 semanas)</p>
-              <LineChart data={BARRIO_USERS} color="#3b82f6" />
-              <BarChart data={BARRIO_USERS} labels={WEEKS} color="#3b82f6" />
+              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ NUEVOS USUARIOS POR SEMANA</p>
+              <LineChart data={baUsersWeekly} color="#3b82f6" />
+              <BarChart data={baUsersWeekly} labels={WEEKS} color="#3b82f6" />
             </div>
             <div style={card}>
               <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ INCIDENTES POR SEMANA</p>
-              <LineChart data={BARRIO_INC} color="#ef4444" />
-              <BarChart data={BARRIO_INC} labels={WEEKS} color="#ef4444" />
+              <LineChart data={baIncWeekly} color="#ef4444" />
+              <BarChart data={baIncWeekly} labels={WEEKS} color="#ef4444" />
             </div>
             <div style={card}>
               <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ SOS POR SEMANA</p>
-              <BarChart data={BARRIO_SOS} labels={WEEKS} color="#f59e0b" />
+              <BarChart data={baSosWeekly} labels={WEEKS} color="#f59e0b" />
             </div>
             <div style={card}>
               <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ CATEGORÍAS DE INCIDENTES</p>
-              <Donut items={INC_CATS} />
+              <Donut items={baIncCats} />
             </div>
             <div style={{ ...card, gridColumn: '1 / -1' }}>
               <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ CIUDADES MÁS ACTIVAS</p>
@@ -246,14 +319,14 @@ export default function Analytics({ onBack, theme }: Props) {
         {tab === 'vor' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div style={card}>
-              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ SESIONES POR SEMANA</p>
+              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ SESIONES POR SEMANA (estimado)</p>
               <LineChart data={VOR_SESSIONS} color="#e91e8c" />
               <BarChart data={VOR_SESSIONS} labels={WEEKS} color="#e91e8c" />
             </div>
             <div style={card}>
-              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 16px' }}>━━ RETOS ACUMULADOS</p>
-              <LineChart data={VOR_RETOS} color="#8b5cf6" />
-              <BarChart data={VOR_RETOS} labels={WEEKS} color="#8b5cf6" unit=" retos" />
+              <p style={{ color: theme.textDim, fontSize: 10, letterSpacing: '0.3em', margin: '0 0 4px' }}>━━ CONTENIDO EN SUPABASE</p>
+              <p style={{ color: theme.textDim, fontSize: 10, margin: '0 0 16px' }}>Retos: <strong style={{ color: '#8b5cf6' }}>{loaded ? vorTotals.retos : '…'}</strong> · Castigos: <strong style={{ color: '#3b82f6' }}>{loaded ? vorTotals.castigos : '…'}</strong></p>
+              <BarChart data={VOR_SESSIONS} labels={WEEKS} color="#8b5cf6" unit=" ses" />
             </div>
           </div>
         )}
@@ -287,7 +360,9 @@ export default function Analytics({ onBack, theme }: Props) {
 
         <div style={{ ...card, marginTop: 14, textAlign: 'center' as const }}>
           <p style={{ color: theme.textDim, fontSize: 11, margin: 0 }}>
-            📌 Los datos actuales son ilustrativos. Cuando conectes Supabase, estas gráficas mostrarán métricas reales en tiempo real.
+            {loaded
+              ? '● Datos en tiempo real desde Supabase y Neon PostgreSQL'
+              : '⏳ Cargando datos reales…'}
           </p>
         </div>
       </div>

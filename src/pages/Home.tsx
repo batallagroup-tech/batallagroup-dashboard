@@ -1,7 +1,9 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import type { Theme } from '../App';
 import type { Screen } from '../types';
 import type { Lang } from '../App';
+import { supabase } from '../supabase';
+import { neon } from '@neondatabase/serverless';
 
 interface Props {
   onNavigate: (screen: Screen) => void;
@@ -89,12 +91,52 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme,
   const [hoveredApp, setHoveredApp] = useState<string | null>(null);
   const t = T[lang];
 
+  const [baStats, setBaStats] = useState({ incidents: 0, users: 0, reports: 0 });
+  const [yvStats, setYvStats] = useState({ orders: 0, usuarios: 0 });
+  const [statsLoaded, setStatsLoaded] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      // BarrioAlerta desde Supabase
+      try {
+        const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+        const [incRes, usersRes] = await Promise.all([
+          supabase.from('incidents').select('report_count', { count: 'exact' }).gte('created_at', cutoff),
+          supabase.from('users').select('id', { count: 'exact', head: true }),
+        ]);
+        setBaStats({
+          incidents: incRes.count ?? 0,
+          users: usersRes.count ?? 0,
+          reports: (incRes.data ?? []).reduce((a: number, r: any) => a + (r.report_count ?? 0), 0),
+        });
+      } catch {}
+
+      // Ya Voy! desde Neon
+      try {
+        const db = neon(import.meta.env.VITE_DATABASE_URL!);
+        const [ordRes, usrRes] = await Promise.all([
+          db.query("SELECT COUNT(*)::int AS cnt FROM pedidos WHERE creado_en > NOW() - INTERVAL '30 days'"),
+          db.query("SELECT COUNT(*)::int AS cnt FROM usuarios WHERE rol = 'cliente'"),
+        ]);
+        setYvStats({
+          orders: (ordRes[0] as any)?.cnt ?? 0,
+          usuarios: (usrRes[0] as any)?.cnt ?? 0,
+        });
+      } catch {}
+
+      setStatsLoaded(true);
+    };
+    load();
+  }, []);
+
   const now = new Date().toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   }).toUpperCase();
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? t.greetMorning : hour < 19 ? t.greetAfternoon : t.greetEvening;
+
+  const dash = statsLoaded ? undefined : '…';
 
   const APPS = [
     {
@@ -109,24 +151,32 @@ export default function Home({ onNavigate, onLogout, notifBell, onSearch, theme,
       icon: 'BA', color: '#3b82f6',
       borderIdle: 'rgba(59,130,246,0.15)', borderHover: 'rgba(59,130,246,0.45)', bgHover: 'rgba(59,130,246,0.05)',
       status: t.live, statusColor: '#22c55e',
-      stats: [{ label: t.incidents, value: '-' }, { label: t.users, value: '-' }, { label: t.reports, value: '-' }],
+      stats: [
+        { label: t.incidents, value: dash ?? String(baStats.incidents) },
+        { label: t.users,     value: dash ?? String(baStats.users) },
+        { label: t.reports,   value: dash ?? String(baStats.reports) },
+      ],
     },
     {
       id: 'yavoy' as Screen, name: 'Ya Voy!', desc: t.yvDesc,
       icon: 'YV', color: '#f97316',
       borderIdle: 'rgba(249,115,22,0.15)', borderHover: 'rgba(249,115,22,0.45)', bgHover: 'rgba(249,115,22,0.05)',
       status: t.dev, statusColor: '#f59e0b',
-      stats: [{ label: t.subapps, value: '9' }, { label: t.orders, value: '-' }, { label: t.status, value: t.dev }],
+      stats: [
+        { label: t.subapps, value: '9' },
+        { label: t.orders,  value: dash ?? String(yvStats.orders) },
+        { label: t.status,  value: t.dev },
+      ],
     },
   ];
 
   const KPI = [
-    { label: t.kpiApps,      value: '2',     sub: 'VOR - BarrioAlerta', color: '#22c55e' },
-    { label: t.kpiDev,       value: '1',     sub: 'Ya Voy!',            color: '#f59e0b' },
-    { label: t.kpiUptime,    value: '99.8%', sub: t.subUptime,          color: '#3b82f6' },
-    { label: t.kpiUsers,     value: '89+',   sub: t.subUsers,           color: '#8b5cf6' },
-    { label: t.kpiIncidents, value: '-',     sub: t.subIncidents,       color: '#ef4444' },
-    { label: t.kpiDeploys,   value: '12',    sub: t.subDeploys,         color: '#e91e8c' },
+    { label: t.kpiApps,      value: '2',   sub: 'VOR - BarrioAlerta',                               color: '#22c55e' },
+    { label: t.kpiDev,       value: '1',   sub: 'Ya Voy!',                                           color: '#f59e0b' },
+    { label: t.kpiUptime,    value: '99.8%', sub: t.subUptime,                                       color: '#3b82f6' },
+    { label: t.kpiUsers,     value: dash ?? String(baStats.users + yvStats.usuarios), sub: t.subUsers, color: '#8b5cf6' },
+    { label: t.kpiIncidents, value: dash ?? String(baStats.incidents), sub: t.subIncidents,           color: '#ef4444' },
+    { label: t.kpiDeploys,   value: '12',  sub: t.subDeploys,                                        color: '#e91e8c' },
   ];
 
   const ACTS = [t.act1, t.act2, t.act3, t.act4, t.act5];
