@@ -72,6 +72,17 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     return () => clearInterval(iv);
   }, []);
 
+  const notificarAPI = async (path: string, body: object) => {
+    const apiUrl = import.meta.env.VITE_YAVOY_API;
+    const secret = import.meta.env.VITE_ADMIN_SECRET;
+    if (!apiUrl) return;
+    await fetch(`${apiUrl}/api/admin/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": secret || "" },
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  };
+
   const aprobar = async (s: Solicitud) => {
     setProc(s.id);
     try {
@@ -84,6 +95,7 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
           [s.usuario_id, s.datos?.nombre_negocio ?? "", (s.datos?.tipo_negocio ?? "").toLowerCase() === "restaurante" ? "restaurante" : "tienda", s.datos?.direccion ?? "", s.datos?.foto_url ?? "", "aprobado", s.datos?.lat ?? null, s.datos?.lng ?? null]);
       }
       await db().query("UPDATE solicitudes SET status=$1 WHERE id=$2", ["aprobado", s.id]);
+      await notificarAPI("aprobar-restaurante", { usuarioId: s.usuario_id, nombreNegocio: s.datos?.nombre_negocio });
       await cargar();
     } catch (e: any) { setError("Error al aprobar: " + e.message); }
     finally { setProc(null); }
@@ -93,7 +105,9 @@ function RestauranteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme 
     if (!razon.trim()) return;
     setProc(id);
     try {
+      const s = solicitudes.find(x => x.id === id);
       await db().query("UPDATE solicitudes SET status=$1, razon_rechazo=$2 WHERE id=$3", ["rechazado", razon, id]);
+      if (s) await notificarAPI("rechazar-restaurante", { usuarioId: s.usuario_id, razon });
       setRech(null); setRazon(""); await cargar();
     } catch (e: any) { setError("Error: " + e.message); }
     finally { setProc(null); }
@@ -219,6 +233,17 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
 
   const getNombre = (s: Solicitud) => nombreEdit[s.id] ?? s.datos?.nombre ?? "";
 
+  const notificarAPI = async (path: string, body: object) => {
+    const apiUrl = import.meta.env.VITE_YAVOY_API;
+    const secret = import.meta.env.VITE_ADMIN_SECRET;
+    if (!apiUrl) return;
+    await fetch(`${apiUrl}/api/admin/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-secret": secret || "" },
+      body: JSON.stringify(body),
+    }).catch(() => {});
+  };
+
   const aprobar = async (s: Solicitud) => {
     setProc(s.id);
     const nombre = getNombre(s);
@@ -238,6 +263,7 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
       await db().query("UPDATE usuarios SET nombre=$1 WHERE id=$2", [nombre, s.usuario_id]);
       // Marcar solicitud como aprobada
       await db().query("UPDATE solicitudes SET status=$1 WHERE id=$2", ["aprobado", s.id]);
+      await notificarAPI("aprobar-repartidor", { usuarioId: s.usuario_id });
       await cargar();
     } catch (e: any) { setError("Error al aprobar: " + e.message); }
     finally { setProc(null); }
@@ -247,7 +273,9 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
     if (!razon.trim()) return;
     setProc(id);
     try {
+      const s = sol.find(x => x.id === id);
       await db().query("UPDATE solicitudes SET status=$1, razon_rechazo=$2 WHERE id=$3", ["rechazado", razon, id]);
+      if (s) await notificarAPI("rechazar-repartidor", { usuarioId: s.usuario_id, razon });
       setRech(null); setRazon(""); await cargar();
     } catch (e: any) { setError("Error: " + e.message); }
     finally { setProc(null); }
@@ -389,7 +417,7 @@ function RepartidorAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }
 
 // ─── CLIENTE ─────────────────────────────────────────────────────────────────
 function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
-  const [tab, setTab] = useState<"metricas"|"pedidos"|"usuarios">("metricas")
+  const [tab, setTab] = useState<"metricas"|"pedidos"|"usuarios">("usuarios")
   const [stats, setStats] = useState({ pedidosHoy: 0, totalUsuarios: 0, restaurantesActivos: 0, repartidoresActivos: 0, ingresoHoy: 0 })
   const [pedidos, setPedidos] = useState<any[]>([])
   const [usuarios, setUsuarios] = useState<any[]>([])
@@ -399,11 +427,18 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
   const [eliminando, setEliminando] = useState<string|null>(null)
   const [repartidoresOnline, setRepsOnline] = useState<any[]>([])
   const [filtroStatus, setFiltroStatus] = useState("todos")
+  const [filtroRol, setFiltroRol] = useState<"todos"|"cliente"|"repartidor"|"negocio">("todos")
+  const [ordenar, setOrdenar] = useState<"reciente"|"nombre"|"pedidos"|"gastado"|"ultimo_pedido">("reciente")
+  const [expandido, setExpandido] = useState<string|null>(null)
+  const [resetLoading, setResetLoading] = useState(false)
+
+  const _API = import.meta.env.VITE_YAVOY_API || "https://ya-voy-api.onrender.com"
+  const _SECRET = import.meta.env.VITE_ADMIN_SECRET || ""
 
   const cargar = async () => {
     setLoading(true); setError("")
     try {
-      const repsOnlineRes = await fetch("https://ya-voy-api.onrender.com/api/repartidor/online").then(r=>r.json()).catch(()=>[])
+      const repsOnlineRes = await fetch(_API + "/api/repartidor/online").then(r=>r.json()).catch(()=>[])
       setRepsOnline(Array.isArray(repsOnlineRes) ? repsOnlineRes : [])
       const [statsRes, pedidosRes, usuariosRes] = await Promise.all([
         db().query(`SELECT
@@ -418,7 +453,16 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
           LEFT JOIN usuarios u ON u.id = p.cliente_id
           LEFT JOIN viveres v ON v.id = p.negocio_id
           ORDER BY p.creado_en DESC LIMIT 100`),
-        db().query(`SELECT * FROM usuarios ORDER BY creado_en DESC LIMIT 200`)
+        db().query(`
+          SELECT u.*,
+            COUNT(p.id)::int as pedidos_total,
+            COALESCE(SUM(CASE WHEN p.status = 'entregado' THEN p.total ELSE 0 END),0)::numeric as total_gastado,
+            MAX(p.creado_en) as ultimo_pedido
+          FROM usuarios u
+          LEFT JOIN pedidos p ON p.cliente_id = u.id
+          GROUP BY u.id
+          ORDER BY u.creado_en DESC
+          LIMIT 500`)
       ])
       const s = statsRes[0]
       setStats({ pedidosHoy: Number(s.pedidos_hoy), totalUsuarios: Number(s.total_usuarios), restaurantesActivos: Number(s.restaurantes_activos), repartidoresActivos: Number(s.repartidores_activos), ingresoHoy: Number(s.ingreso_hoy) })
@@ -434,7 +478,10 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     if (!window.confirm(`¿Eliminar a "${nombre}"? Se eliminarán también sus pedidos, solicitudes y negocios. Esta acción no se puede deshacer.`)) return
     setEliminando(id)
     try {
+      await db().query("DELETE FROM mensajes WHERE pedido_id IN (SELECT id FROM pedidos WHERE cliente_id = $1)", [id])
       await db().query("DELETE FROM pedidos WHERE cliente_id = $1", [id])
+      await db().query("DELETE FROM favoritos WHERE cliente_id = $1", [id])
+      await db().query("DELETE FROM direcciones WHERE usuario_id = $1", [id])
       await db().query("DELETE FROM solicitudes WHERE usuario_id = $1", [id])
       await db().query("DELETE FROM viveres WHERE owner_id = $1", [id])
       await db().query("DELETE FROM repartidores WHERE id = $1", [id])
@@ -445,9 +492,40 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     finally { setEliminando(null) }
   }
 
+  const resetDatosPrueba = async () => {
+    if (!window.confirm("⚠️ Esto eliminará TODOS los usuarios, pedidos, solicitudes, negocios y repartidores. ¿Estás seguro?")) return
+    if (!window.confirm("Segunda confirmación: se borrará ABSOLUTAMENTE todo. ¿Continuar?")) return
+    setResetLoading(true)
+    try {
+      await fetch(_API + "/api/admin/reset-datos-prueba", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + _SECRET },
+        body: JSON.stringify({ confirmacion: "BORRAR_TODO" })
+      })
+      await cargar()
+      setError("")
+    } catch(e: any) { setError("Error al resetear: " + e.message) }
+    finally { setResetLoading(false) }
+  }
+
   const STATUS_COLOR: Record<string, string> = { nuevo: "#f59e0b", preparando: "#3b82f6", listo: "#8b5cf6", en_camino: "#f97316", entregado: "#22c55e", cancelado: "#ef4444", esperando_cliente: "#ec4899" }
+
   const pedidosFiltrados = pedidos.filter(p => filtroStatus === "todos" || p.status === filtroStatus)
-  const usuariosFiltrados = usuarios.filter(u => !busqueda || u.email?.toLowerCase().includes(busqueda.toLowerCase()) || u.nombre?.toLowerCase().includes(busqueda.toLowerCase()))
+
+  const usuariosFiltrados = usuarios
+    .filter(u => {
+      if (filtroRol !== "todos" && u.rol !== filtroRol) return false
+      if (!busqueda) return true
+      const q = busqueda.toLowerCase()
+      return u.email?.toLowerCase().includes(q) || u.nombre?.toLowerCase().includes(q) || u.id?.toLowerCase().includes(q)
+    })
+    .sort((a, b) => {
+      if (ordenar === "nombre") return (a.nombre || "").localeCompare(b.nombre || "")
+      if (ordenar === "pedidos") return Number(b.pedidos_total || 0) - Number(a.pedidos_total || 0)
+      if (ordenar === "gastado") return Number(b.total_gastado || 0) - Number(a.total_gastado || 0)
+      if (ordenar === "ultimo_pedido") return (b.ultimo_pedido || "").localeCompare(a.ultimo_pedido || "")
+      return new Date(b.creado_en).getTime() - new Date(a.creado_en).getTime()
+    })
 
   const card = (label: string, value: string|number, icon: string, color: string) => (
     <div style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 14, padding: "20px 22px", flex: 1, minWidth: 140 }}>
@@ -461,6 +539,9 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
     <button onClick={() => setTab(id as any)} style={{ background: tab === id ? "#3b82f6" : theme.surface, border: `1px solid ${tab === id ? "#3b82f6" : theme.border}`, borderRadius: 8, color: tab === id ? "#fff" : theme.textMuted, padding: "8px 20px", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>{label}</button>
   )
 
+  const ROL_COLOR: Record<string, string> = { cliente: "#3b82f6", repartidor: "#f97316", negocio: "#22c55e" }
+  const ROL_ICON: Record<string, string> = { cliente: "👤", repartidor: "🛵", negocio: "🍽️" }
+
   return (
     <div style={{ minHeight: "100vh", background: theme.bg, fontFamily: "'Inter',system-ui,sans-serif" }}>
       <div style={{ background: theme.bg2, borderBottom: `1px solid ${theme.border}`, padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
@@ -470,15 +551,157 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
           <p style={{ color: theme.textDim, fontSize: 11, margin: "2px 0 0", letterSpacing: "0.15em" }}>PEDIDOS · USUARIOS · MÉTRICAS</p>
         </div>
         <button onClick={cargar} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.textMuted, padding: "8px 14px", cursor: "pointer", fontSize: 12 }}>↻ Actualizar</button>
+        <button onClick={resetDatosPrueba} disabled={resetLoading} style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700, opacity: resetLoading ? 0.5 : 1 }}>
+          {resetLoading ? "Borrando..." : "🗑 Reset prueba"}
+        </button>
       </div>
       <div style={{ padding: "24px 28px" }}>
         {error && <div style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 10, padding: "12px 16px", color: "#ef4444", fontSize: 13, marginBottom: 16 }}>{error}</div>}
         <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-          {tabBtn("metricas", "📊 Métricas")}
+          {tabBtn("usuarios", `👤 Usuarios (${usuarios.length})`)}
           {tabBtn("pedidos", "🛵 Pedidos")}
-          {tabBtn("usuarios", "👤 Usuarios")}
+          {tabBtn("metricas", "📊 Métricas")}
         </div>
         {loading ? <p style={{ color: theme.textDim, textAlign: "center", paddingTop: 60 }}>Cargando...</p> : <>
+
+          {tab === "usuarios" && (
+            <div>
+              {/* Buscador */}
+              <div style={{ position: "relative" as const, marginBottom: 12 }}>
+                <span style={{ position: "absolute" as const, left: 14, top: "50%", transform: "translateY(-50%)", color: theme.textDim, fontSize: 16 }}>🔍</span>
+                <input
+                  value={busqueda} onChange={e => setBusqueda(e.target.value)}
+                  placeholder="Buscar por nombre, email o ID..."
+                  style={{ width: "100%", background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 10, color: theme.text, padding: "12px 16px 12px 40px", fontSize: 13, outline: "none", boxSizing: "border-box" as const }}
+                />
+                {busqueda && (
+                  <button onClick={() => setBusqueda("")} style={{ position: "absolute" as const, right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: theme.textDim, cursor: "pointer", fontSize: 16 }}>✕</button>
+                )}
+              </div>
+
+              {/* Filtros y ordenamiento */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" as const, alignItems: "center" }}>
+                <span style={{ color: theme.textDim, fontSize: 11, fontWeight: 700 }}>ROL:</span>
+                {(["todos","cliente","repartidor","negocio"] as const).map(r => (
+                  <button key={r} onClick={() => setFiltroRol(r)}
+                    style={{ background: filtroRol === r ? (ROL_COLOR[r] || "#3b82f6") : theme.surface, border: `1px solid ${filtroRol === r ? (ROL_COLOR[r] || "#3b82f6") : theme.border}`, borderRadius: 20, color: filtroRol === r ? "#fff" : theme.textMuted, padding: "4px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700 }}>
+                    {ROL_ICON[r] || ""} {r === "todos" ? "Todos" : r}
+                  </button>
+                ))}
+                <div style={{ width: 1, height: 20, background: theme.border, margin: "0 4px" }} />
+                <span style={{ color: theme.textDim, fontSize: 11, fontWeight: 700 }}>ORDENAR:</span>
+                <select value={ordenar} onChange={e => setOrdenar(e.target.value as any)}
+                  style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 8, color: theme.text, padding: "5px 10px", fontSize: 11, cursor: "pointer", outline: "none" }}>
+                  <option value="reciente">Más recientes</option>
+                  <option value="nombre">Nombre A-Z</option>
+                  <option value="pedidos">Más pedidos</option>
+                  <option value="gastado">Mayor gasto</option>
+                  <option value="ultimo_pedido">Último pedido</option>
+                </select>
+              </div>
+
+              {/* Contador */}
+              <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 12px", fontWeight: 700 }}>
+                {usuariosFiltrados.length} usuario{usuariosFiltrados.length !== 1 ? "s" : ""} {filtroRol !== "todos" ? `· ${filtroRol}` : ""} {busqueda ? `· "${busqueda}"` : ""}
+              </p>
+
+              {/* Lista */}
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                {usuariosFiltrados.map(u => {
+                  const exp = expandido === u.id
+                  const pedidosUsuario = pedidos.filter(p => p.cliente_id === u.id || p.cliente_email === u.email)
+                  return (
+                    <div key={u.id} style={{ background: theme.surface, border: `1px solid ${exp ? "#3b82f6" : theme.border}`, borderRadius: 12, overflow: "hidden" }}>
+                      {/* Fila principal */}
+                      <div style={{ padding: "14px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }} onClick={() => setExpandido(exp ? null : u.id)}>
+                        {/* Avatar */}
+                        <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${ROL_COLOR[u.rol] || "#64748b"}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>
+                          {u.foto_perfil
+                            ? <img src={u.foto_perfil} style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover" as const }} />
+                            : ROL_ICON[u.rol] || "👤"}
+                        </div>
+                        {/* Info principal */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                            <p style={{ color: theme.text, fontSize: 13, fontWeight: 700, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{u.nombre || "Sin nombre"}</p>
+                            <span style={{ background: `${ROL_COLOR[u.rol] || "#64748b"}20`, color: ROL_COLOR[u.rol] || "#64748b", border: `1px solid ${ROL_COLOR[u.rol] || "#64748b"}30`, borderRadius: 20, padding: "1px 8px", fontSize: 9, fontWeight: 700, flexShrink: 0 }}>{u.rol?.toUpperCase()}</span>
+                          </div>
+                          <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{u.email}</p>
+                          <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>Registro: {new Date(u.creado_en).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                        </div>
+                        {/* Stats */}
+                        <div style={{ display: "flex", gap: 16, flexShrink: 0 }}>
+                          <div style={{ textAlign: "center" as const }}>
+                            <p style={{ color: "#3b82f6", fontSize: 16, fontWeight: 900, margin: 0 }}>{Number(u.pedidos_total || 0)}</p>
+                            <p style={{ color: theme.textDim, fontSize: 9, margin: 0, fontWeight: 700 }}>PEDIDOS</p>
+                          </div>
+                          <div style={{ textAlign: "center" as const }}>
+                            <p style={{ color: "#22c55e", fontSize: 14, fontWeight: 900, margin: 0 }}>${Number(u.total_gastado || 0).toFixed(0)}</p>
+                            <p style={{ color: theme.textDim, fontSize: 9, margin: 0, fontWeight: 700 }}>GASTADO</p>
+                          </div>
+                        </div>
+                        {/* Chevron */}
+                        <span style={{ color: theme.textDim, fontSize: 12, flexShrink: 0, transition: "transform 0.2s", display: "inline-block", transform: exp ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
+                      </div>
+
+                      {/* Expandido */}
+                      {exp && (
+                        <div style={{ borderTop: `1px solid ${theme.border}`, padding: "16px 18px" }}>
+                          {/* ID */}
+                          <div style={{ marginBottom: 12 }}>
+                            <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", margin: "0 0 4px" }}>ID DEL USUARIO</p>
+                            <p style={{ color: theme.textMuted, fontSize: 11, margin: 0, fontFamily: "monospace", wordBreak: "break-all" as const }}>{u.id}</p>
+                          </div>
+                          {/* Último pedido */}
+                          {u.ultimo_pedido && (
+                            <div style={{ marginBottom: 12 }}>
+                              <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", margin: "0 0 4px" }}>ÚLTIMO PEDIDO</p>
+                              <p style={{ color: theme.textMuted, fontSize: 11, margin: 0 }}>{new Date(u.ultimo_pedido).toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                            </div>
+                          )}
+                          {/* Pedidos recientes */}
+                          {pedidosUsuario.length > 0 && (
+                            <div style={{ marginBottom: 14 }}>
+                              <p style={{ color: theme.textDim, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", margin: "0 0 8px" }}>PEDIDOS RECIENTES</p>
+                              <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+                                {pedidosUsuario.slice(0, 5).map(p => (
+                                  <div key={p.id} style={{ background: theme.bg, borderRadius: 8, padding: "8px 12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                      <p style={{ color: theme.text, fontSize: 12, fontWeight: 700, margin: "0 0 2px" }}>#{p.numero} — {p.negocio_nombre || "—"}</p>
+                                      <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>{new Date(p.creado_en).toLocaleDateString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                                    </div>
+                                    <div style={{ textAlign: "right" as const }}>
+                                      <span style={{ background: `${STATUS_COLOR[p.status] || "#64748b"}20`, color: STATUS_COLOR[p.status] || "#64748b", borderRadius: 20, padding: "2px 8px", fontSize: 9, fontWeight: 700 }}>{p.status}</span>
+                                      <p style={{ color: theme.text, fontSize: 12, fontWeight: 900, margin: "4px 0 0" }}>${Number(p.total).toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                                {pedidosUsuario.length > 5 && <p style={{ color: theme.textDim, fontSize: 11, textAlign: "center" as const, margin: "4px 0 0" }}>+{pedidosUsuario.length - 5} pedidos más</p>}
+                              </div>
+                            </div>
+                          )}
+                          {/* Acciones */}
+                          <div style={{ display: "flex", gap: 8 }}>
+                            <button onClick={() => eliminarUsuario(u.id, u.nombre || u.email)} disabled={eliminando === u.id}
+                              style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", padding: "7px 16px", cursor: "pointer", fontSize: 11, fontWeight: 700, opacity: eliminando === u.id ? 0.5 : 1 }}>
+                              {eliminando === u.id ? "Eliminando..." : "🗑 Eliminar usuario"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+                {usuariosFiltrados.length === 0 && (
+                  <div style={{ textAlign: "center" as const, padding: "60px 0", color: theme.textDim }}>
+                    <p style={{ fontSize: 36, marginBottom: 8 }}>👤</p>
+                    <p style={{ fontSize: 14, margin: 0 }}>Sin usuarios{busqueda ? ` para "${busqueda}"` : ""}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {tab === "metricas" && (
             <div>
               <div style={{ display: "flex", gap: 16, flexWrap: "wrap" as const, marginBottom: 24 }}>
@@ -520,6 +743,7 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
               </div>
             </div>
           )}
+
           {tab === "pedidos" && (
             <div>
               <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" as const }}>
@@ -545,24 +769,7 @@ function ClienteAdmin({ onBack, theme }: { onBack: () => void; theme: Theme }) {
               </div>
             </div>
           )}
-          {tab === "usuarios" && (
-            <div>
-              <input value={busqueda} onChange={e => setBusqueda(e.target.value)} placeholder="Buscar por nombre o email..." style={{ width: "100%", background: theme.bg, border: `1px solid ${theme.border}`, borderRadius: 10, color: theme.text, padding: "12px 16px", fontSize: 13, outline: "none", marginBottom: 16, boxSizing: "border-box" as const }} />
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
-                {usuariosFiltrados.map(u => (
-                  <div key={u.id} style={{ background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: 12, padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <p style={{ color: theme.text, fontSize: 13, fontWeight: 700, margin: "0 0 2px" }}>{u.nombre || "Sin nombre"}</p>
-                      <p style={{ color: theme.textDim, fontSize: 11, margin: "0 0 2px" }}>{u.email}</p>
-                      <p style={{ color: theme.textDim, fontSize: 10, margin: 0 }}>Rol: {u.rol} · {new Date(u.creado_en).toLocaleDateString("es-MX")}</p>
-                    </div>
-                    <button onClick={() => eliminarUsuario(u.id, u.nombre || u.email)} disabled={eliminando === u.id} style={{ background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", padding: "6px 14px", cursor: "pointer", fontSize: 11, fontWeight: 700, opacity: eliminando === u.id ? 0.5 : 1 }}>{eliminando === u.id ? "..." : "Eliminar"}</button>
-                  </div>
-                ))}
-                {usuariosFiltrados.length === 0 && <p style={{ color: theme.textDim, textAlign: "center", padding: "40px 0" }}>Sin usuarios</p>}
-              </div>
-            </div>
-          )}
+
         </>}
       </div>
     </div>
